@@ -18,11 +18,10 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-your-default-dev-key-
 DEBUG = False
 
 # Allowed Hosts
-# ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",") if os.environ.get("ALLOWED_HOSTS") else []
-# if DEBUG:
-#     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
-
-ALLOWED_HOSTS=["arkofgod.online", "https://ark-of-god-admi.onrender.com/login"]
+ALLOWED_HOSTS = [
+    "arkofgod.online",
+    "ark-of-god-admi.onrender.com",
+]
 
 # Applications
 INSTALLED_APPS = [
@@ -86,10 +85,10 @@ DATABASES = {
 
 # Password Validation
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
 # Localization
@@ -99,7 +98,6 @@ USE_I18N = True
 USE_TZ = True
 
 # Static and Media
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -133,22 +131,25 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
 }
 
-# CORS
+# CORS & CSRF
 CSRF_TRUSTED_ORIGINS = [
-    'https://arkofgod.online/',
+    'https://arkofgod.online',
     'https://ark-of-god-admi.onrender.com',
 ]
-
-# If you need cross-site AJAX from your frontend:
 CORS_ALLOWED_ORIGINS = [
-    'https://arkofgod.online/',
+    'https://arkofgod.online',
     'https://ark-of-god-admi.onrender.com',
 ]
-
 CORS_ALLOW_CREDENTIALS = True
+
+# Cookie Security
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE    = True
 SECURE_SSL_REDIRECT   = True
+
+# Cookie Domain (ensure cookies are sent to your frontend)
+CSRF_COOKIE_DOMAIN    = ".arkofgod.online"
+SESSION_COOKIE_DOMAIN = ".arkofgod.online"
 
 # Cloudinary Config
 cloudinary.config(
