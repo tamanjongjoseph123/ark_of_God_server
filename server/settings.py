@@ -20,6 +20,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "arkofgod.online",
     "ark-of-god-admi.onrender.com",
+    '127.0.0.1'
 ]
 
 # Applications
@@ -74,13 +75,23 @@ WSGI_APPLICATION = "server.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT"),
+        "NAME": 'arkofgod',
+        "USER": 'aoguser',
+        "PASSWORD": '_innovateArkOfGod',
+        "HOST": '168.231.80.158',
+        "PORT": 5432,
     }
 }
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("DB_NAME"),
+#         "USER": os.getenv("DB_USER"),
+#         "PASSWORD": os.getenv("DB_PASSWORD"),
+#         "HOST": os.getenv("DB_HOST"),
+#         "PORT": os.getenv("DB_PORT"),
+#     }
+# }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
