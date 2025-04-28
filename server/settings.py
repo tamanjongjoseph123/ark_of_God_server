@@ -22,7 +22,7 @@ DEBUG = False
 # if DEBUG:
 #     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
 
-ALLOWED_HOSTS=["arkofgod.online", "*"]
+ALLOWED_HOSTS=["*"]
 
 # Applications
 INSTALLED_APPS = [
