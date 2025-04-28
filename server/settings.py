@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-import dj_database_url
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
@@ -17,7 +16,7 @@ load_dotenv()
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-your-default-dev-key-here")
 DEBUG = False
 
-# Allowed Hosts
+# Allowed Hosts (only hostnames, no scheme or path)
 ALLOWED_HOSTS = [
     "arkofgod.online",
     "ark-of-god-admi.onrender.com",
@@ -40,8 +39,8 @@ INSTALLED_APPS = [
 
 # Middleware
 MIDDLEWARE = [
-    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -71,7 +70,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'server.wsgi.application'
 
-# Database
+# Database (using individual env vars)
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -102,12 +101,9 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -142,19 +138,18 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# Cookie Security
+# Secure Cookies & SSL
 SESSION_COOKIE_SECURE   = True
 CSRF_COOKIE_SECURE      = True
 SECURE_SSL_REDIRECT     = True
 
-# behind a proxy (Render, Heroku, etc.) — trust their X-Forwarded headers
+# Behind a proxy (Render, Heroku, etc.) — trust X-Forwarded headers
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST    = True
 
 # Cookie Domain (ensure cookies are sent to your frontend)
-CSRF_COOKIE_DOMAIN      = ".arkofgod.online"
-SESSION_COOKIE_DOMAIN   = ".arkofgod.online"
-
+CSRF_COOKIE_DOMAIN      = '.arkofgod.online'
+SESSION_COOKIE_DOMAIN   = '.arkofgod.online'
 
 # Cloudinary Config
 cloudinary.config(
