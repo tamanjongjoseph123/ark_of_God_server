@@ -20,7 +20,8 @@ DEBUG = True
 ALLOWED_HOSTS = [
     "arkofgod.online",
     "ark-of-god-admi.onrender.com",
-    '127.0.0.1'
+    '127.0.0.1', 
+    '168.231.80.158'
 ]
 
 # Applications
