@@ -136,20 +136,23 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# Secure cookies & SSL
+# Secure cookies (HTTPS only)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
 
-# Trust proxy headers (for HTTPS & Host)
+# SSL redirect: disable in-container redirect loops if behind a TLS-terminating proxy
+# For Render, the proxy already enforces HTTPS, so turn this OFF
+SECURE_SSL_REDIRECT = False
+
+# Trust proxy headers so Django picks up the original scheme
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
-# Cookie domains
+# Cookie domains (so cookies are sent to your frontend)
 CSRF_COOKIE_DOMAIN = ".arkofgod.online"
 SESSION_COOKIE_DOMAIN = ".arkofgod.online"
 
-# Cloudinary
+# Cloudinary config
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
     api_key=os.getenv("CLOUDINARY_API_KEY"),
