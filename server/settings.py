@@ -15,7 +15,7 @@ load_dotenv()
 
 # Security
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-your-default-dev-key-here")
-DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+DEBUG = False
 
 # Allowed Hosts
 # ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",") if os.environ.get("ALLOWED_HOSTS") else []
