@@ -18,9 +18,11 @@ SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-your-default-dev-key-
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
 # Allowed Hosts
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",") if os.environ.get("ALLOWED_HOSTS") else []
-if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
+# ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",") if os.environ.get("ALLOWED_HOSTS") else []
+# if DEBUG:
+#     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
+
+ALLOWED_HOSTS='["168.231.80.158", "127.0.0.1", "arkofgod.online", "*"]'
 
 # Applications
 INSTALLED_APPS = [
