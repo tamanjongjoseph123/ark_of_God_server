@@ -22,7 +22,7 @@ DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 # if DEBUG:
 #     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
 
-ALLOWED_HOSTS=["*"]
+ALLOWED_HOSTS=["arkofgod.online", "*"]
 
 # Applications
 INSTALLED_APPS = [
