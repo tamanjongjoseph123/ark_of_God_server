@@ -22,7 +22,7 @@ DEBUG = False
 # if DEBUG:
 #     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
 
-ALLOWED_HOSTS=["*"]
+ALLOWED_HOSTS=["arkofgod.online", "https://ark-of-god-admi.onrender.com/login"]
 
 # Applications
 INSTALLED_APPS = [
@@ -134,8 +134,21 @@ SIMPLE_JWT = {
 }
 
 # CORS
-CORS_ALLOW_ALL_ORIGINS = True
+CSRF_TRUSTED_ORIGINS = [
+    'https://arkofgod.online/',
+    'https://ark-of-god-admi.onrender.com',
+]
+
+# If you need cross-site AJAX from your frontend:
+CORS_ALLOWED_ORIGINS = [
+    'https://arkofgod.online/',
+    'https://ark-of-god-admi.onrender.com',
+]
+
 CORS_ALLOW_CREDENTIALS = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE    = True
+SECURE_SSL_REDIRECT   = True
 
 # Cloudinary Config
 cloudinary.config(
