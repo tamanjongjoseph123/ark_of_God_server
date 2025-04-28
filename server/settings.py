@@ -143,13 +143,18 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # Cookie Security
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE    = True
-SECURE_SSL_REDIRECT   = True
+SESSION_COOKIE_SECURE   = True
+CSRF_COOKIE_SECURE      = True
+SECURE_SSL_REDIRECT     = True
+
+# behind a proxy (Render, Heroku, etc.) — trust their X-Forwarded headers
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST    = True
 
 # Cookie Domain (ensure cookies are sent to your frontend)
-CSRF_COOKIE_DOMAIN    = ".arkofgod.online"
-SESSION_COOKIE_DOMAIN = ".arkofgod.online"
+CSRF_COOKIE_DOMAIN      = ".arkofgod.online"
+SESSION_COOKIE_DOMAIN   = ".arkofgod.online"
+
 
 # Cloudinary Config
 cloudinary.config(
