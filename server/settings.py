@@ -5,23 +5,20 @@ import dj_database_url
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+from dotenv import load_dotenv
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env only locally
-if os.environ.get('RENDER', None) is None:
-    from dotenv import load_dotenv
-    load_dotenv()
+# Load environment variables
+load_dotenv()
 
 # Security
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-your-default-dev-key-here")
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
 # Allowed Hosts
-ALLOWED_HOSTS = []
-if os.environ.get("ALLOWED_HOSTS"):
-    ALLOWED_HOSTS.extend(os.environ.get("ALLOWED_HOSTS").split(","))
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",") if os.environ.get("ALLOWED_HOSTS") else []
 if DEBUG:
     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
 
@@ -33,7 +30,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
     'rest_framework',
     'corsheaders',
     'api',
@@ -41,8 +37,7 @@ INSTALLED_APPS = [
     'cloudinary_storage',
 ]
 
-APPEND_SLASH = False
-
+# Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -76,7 +71,14 @@ WSGI_APPLICATION = 'server.wsgi.application'
 
 # Database
 DATABASES = {
-    "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv("DB_NAME"),
+        'USER': os.getenv("DB_USER"),
+        'PASSWORD': os.getenv("DB_PASSWORD"),
+        'HOST': os.getenv("DB_HOST"),
+        'PORT': os.getenv("DB_PORT"),
+    }
 }
 
 # Password Validation
@@ -87,7 +89,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
 ]
 
-# Internationalization
+# Localization
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -96,7 +98,6 @@ USE_TZ = True
 # Static and Media
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
