@@ -19,7 +19,9 @@ DEBUG = True
 # Hosts
 ALLOWED_HOSTS = [
     "arkofgod.online",
+    "admin.arkofgod.online",
     "ark-of-god-admi.onrender.com",
+    "expo.dev",  # Added the Expo domain
     '127.0.0.1', 
     '168.231.80.158'
 ]
@@ -83,16 +85,6 @@ DATABASES = {
         "PORT": 5432,
     }
 }
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.getenv("DB_NAME"),
-#         "USER": os.getenv("DB_USER"),
-#         "PASSWORD": os.getenv("DB_PASSWORD"),
-#         "HOST": os.getenv("DB_HOST"),
-#         "PORT": os.getenv("DB_PORT"),
-#     }
-# }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -140,11 +132,15 @@ SIMPLE_JWT = {
 # CORS & CSRF
 CSRF_TRUSTED_ORIGINS = [
     "https://arkofgod.online",
+    "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
+    "https://expo.dev",  # Allow Expo base domain
 ]
 CORS_ALLOWED_ORIGINS = [
     "https://arkofgod.online",
+    "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
+    "https://expo.dev",  # Allow Expo base domain
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -153,7 +149,6 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 # SSL redirect: disable in-container redirect loops if behind a TLS-terminating proxy
-# For Render, the proxy already enforces HTTPS, so turn this OFF
 SECURE_SSL_REDIRECT = False
 
 # Trust proxy headers so Django picks up the original scheme
