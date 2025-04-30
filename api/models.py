@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-from cloudinary.models import CloudinaryField
+
 
 class User(AbstractUser):
     name = models.CharField(max_length=255)
@@ -16,7 +16,7 @@ class User(AbstractUser):
 class ChurchProject(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    image = CloudinaryField('image', folder='church_projects')
+    image = models.ImageField(upload_to='uploads/church_projects')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -65,7 +65,7 @@ class PrayerRequest(models.Model):
 class Testimony(models.Model):
     name = models.CharField(max_length=255)
     testimony_text = models.TextField(null=True, blank=True)
-    testimony_video = CloudinaryField('video', folder='testimonies', null=True, blank=True)
+    testimony_video = models.FileField(upload_to='uploads/testimony/')
     created_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -75,7 +75,7 @@ class Testimony(models.Model):
 class UpcomingEvent(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    image = CloudinaryField('image', folder='events')
+    image = models.ImageField(upload_to='uploads/events')
     event_date = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
 

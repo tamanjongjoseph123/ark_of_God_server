@@ -6,6 +6,7 @@ import cloudinary.uploader
 import cloudinary.api
 from dotenv import load_dotenv
 
+
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,7 +22,7 @@ ALLOWED_HOSTS = [
     "arkofgod.online",
     "admin.arkofgod.online",
     "ark-of-god-admi.onrender.com",
-    "expo.dev",  # Added the Expo domain
+    "expo.dev", 
     '127.0.0.1', 
     '168.231.80.158'
 ]
@@ -101,7 +102,11 @@ USE_I18N = True
 USE_TZ = True
 
 # Static & media files
-MEDIA_URL = "/media/"
+# MEDIA_URL = "/media/"
+MEDIA_URL = "https://arkofgod.online/aogstorage/"
+DEFAULT_FILE_STORAGE = 'server.ftp_storage.FTPStorage'
+
+
 MEDIA_ROOT = BASE_DIR / "media"
 
 STATIC_URL = "/static/"
@@ -135,12 +140,14 @@ CSRF_TRUSTED_ORIGINS = [
     "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
     "https://expo.dev",  # Allow Expo base domain
+    "http://127.0.0.1:8000"
 ]
 CORS_ALLOWED_ORIGINS = [
     "https://arkofgod.online",
     "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
     "https://expo.dev",  # Allow Expo base domain
+    "http://127.0.0.1:8000"
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -156,8 +163,8 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True
 
 # Cookie domains (so cookies are sent to your frontend)
-CSRF_COOKIE_DOMAIN = ".arkofgod.online"
-SESSION_COOKIE_DOMAIN = ".arkofgod.online"
+# CSRF_COOKIE_DOMAIN = ".arkofgod.online"
+# SESSION_COOKIE_DOMAIN = ".arkofgod.online"
 
 # Cloudinary config
 cloudinary.config(
@@ -166,4 +173,43 @@ cloudinary.config(
     api_secret=os.getenv("CLOUDINARY_API_SECRET"),
     secure=True,
 )
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+# DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+
+# DEFAULT_FILE_STORAGE = 'ftpstorage.storage.FTPStorage'
+
+# # FTP credentials and path (replace PASSWORD with your actual FTP password)
+# FTP_STORAGE_LOCATION = 'ftp://aogstorage:_innovate2025@st60307.ispot.cc/home/st60307/public_html/aogstorage'
+
+# # Optional: Force passive mode (if connection fails)
+# FTP_STORAGE_PARAMS = {'passive': True}
+
+
+
+MEDIA_URL = "https://arkofgod.online/aogstorage/"
+# settings.py
+
+INSTALLED_APPS += ["storages"]
+
+
+# Public URL prefix for uploaded media
+MEDIA_URL = "https://st60307.ispot.cc/aogstorage1/"
+
+STORAGES = {
+    "default": {
+        "BACKEND": "server.storage_backends.FTPStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",  # or another if using WhiteNoise, etc.
+    },
+}
+
+FTP_STORAGE_OPTIONS = {
+    "host": "st60307.ispot.cc",
+    "username": "aogstorage1@st60307.ispot.cc",
+    "password": "_innovate2025",
+    "base_path": "/",
+    "port": 21,
+    "passive": True,
+}
+
