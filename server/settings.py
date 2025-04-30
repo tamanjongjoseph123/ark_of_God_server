@@ -1,31 +1,26 @@
 import os
 from pathlib import Path
 from datetime import timedelta
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
 from dotenv import load_dotenv
-
-
-# Paths
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables
 load_dotenv()
 
+# Paths
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 # SECURITY
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-your-default-dev-key-here")
-DEBUG = True
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise Exception("SECRET_KEY environment variable is not set!")
+
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "yes")
 
 # Hosts
-ALLOWED_HOSTS = [
-    "arkofgod.online",
-    "admin.arkofgod.online",
-    "ark-of-god-admi.onrender.com",
-    "expo.dev", 
-    '127.0.0.1', 
-    '168.231.80.158'
-]
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "arkofgod.online,admin.arkofgod.online,ark-of-god-admi.onrender.com,127.0.0.1"
+).split(",")
 
 # Applications
 INSTALLED_APPS = [
@@ -37,17 +32,16 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "storages",                # django-storages
     "api",
-    "cloudinary",
-    "cloudinary_storage",
 ]
 
 # Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -60,7 +54,7 @@ ROOT_URLCONF = "server.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -79,11 +73,11 @@ WSGI_APPLICATION = "server.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": 'arkofgod',
-        "USER": 'aoguser',
-        "PASSWORD": '_innovateArkOfGod',
-        "HOST": '168.231.80.158',
-        "PORT": 5432,
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
+        "PASSWORD": os.getenv("DB_PASSWORD"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT", 5432),
     }
 }
 
@@ -97,29 +91,28 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = os.getenv("TIME_ZONE", "UTC")
 USE_I18N = True
+USE_L10N = True
 USE_TZ = True
 
-# Static & media files
-# MEDIA_URL = "/media/"
-MEDIA_URL = "https://arkofgod.online/aogstorage/"
-DEFAULT_FILE_STORAGE = 'server.ftp_storage.FTPStorage'
-
-
-MEDIA_ROOT = BASE_DIR / "media"
-
+# Static files
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
+# Media (uploads)
+MEDIA_URL = os.getenv("MEDIA_URL", "/media/")
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Default primary key
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Custom user model
+# Custom User
 AUTH_USER_MODEL = "api.User"
 
-# DRF + JWT
+# REST Framework + JWT
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -135,81 +128,49 @@ SIMPLE_JWT = {
 }
 
 # CORS & CSRF
-CSRF_TRUSTED_ORIGINS = [
-    "https://arkofgod.online",
-    "https://admin.arkofgod.online",
-    "https://ark-of-god-admi.onrender.com",
-    "https://expo.dev",  # Allow Expo base domain
-    "http://127.0.0.1:8000"
-]
-CORS_ALLOWED_ORIGINS = [
-    "https://arkofgod.online",
-    "https://admin.arkofgod.online",
-    "https://ark-of-god-admi.onrender.com",
-    "https://expo.dev",  # Allow Expo base domain
-    "http://127.0.0.1:8000"
-]
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    "https://arkofgod.online,https://admin.arkofgod.online,https://ark-of-god-admi.onrender.com"
+).split(",")
+CORS_ALLOWED_ORIGINS = os.getenv(
+    "CORS_ALLOWED_ORIGINS",
+    "https://arkofgod.online,https://admin.arkofgod.online,https://ark-of-god-admi.onrender.com"
+).split(",")
 CORS_ALLOW_CREDENTIALS = True
 
-# Secure cookies (HTTPS only)
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Security hardening
+if not DEBUG:
+    # Redirect all HTTP to HTTPS
+    SECURE_SSL_REDIRECT = True
+    # Trust proxy headers for scheme
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    # HSTS settings for one year
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # Additional security
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+else:
+    # In development, do not enforce HTTPS
+    SECURE_SSL_REDIRECT = False
 
-# SSL redirect: disable in-container redirect loops if behind a TLS-terminating proxy
-SECURE_SSL_REDIRECT = False
-
-# Trust proxy headers so Django picks up the original scheme
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-USE_X_FORWARDED_HOST = True
-
-# Cookie domains (so cookies are sent to your frontend)
-# CSRF_COOKIE_DOMAIN = ".arkofgod.online"
-# SESSION_COOKIE_DOMAIN = ".arkofgod.online"
-
-# Cloudinary config
-cloudinary.config(
-    cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME"),
-    api_key=os.getenv("CLOUDINARY_API_KEY"),
-    api_secret=os.getenv("CLOUDINARY_API_SECRET"),
-    secure=True,
-)
-# DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
-
-
-# DEFAULT_FILE_STORAGE = 'ftpstorage.storage.FTPStorage'
-
-# # FTP credentials and path (replace PASSWORD with your actual FTP password)
-# FTP_STORAGE_LOCATION = 'ftp://aogstorage:_innovate2025@st60307.ispot.cc/home/st60307/public_html/aogstorage'
-
-# # Optional: Force passive mode (if connection fails)
-# FTP_STORAGE_PARAMS = {'passive': True}
-
-
-
-MEDIA_URL = "https://arkofgod.online/aogstorage/"
-# settings.py
-
-INSTALLED_APPS += ["storages"]
-
-
-# Public URL prefix for uploaded media
-MEDIA_URL = "https://st60307.ispot.cc/aogstorage1/"
-
+# Storage Backend: FTP
 STORAGES = {
     "default": {
         "BACKEND": "server.storage_backends.FTPStorage",
     },
     "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",  # or another if using WhiteNoise, etc.
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
 
 FTP_STORAGE_OPTIONS = {
-    "host": "st60307.ispot.cc",
-    "username": "aogstorage1@st60307.ispot.cc",
-    "password": "_innovate2025",
-    "base_path": "/",
-    "port": 21,
-    "passive": True,
+    "host": os.getenv("FTP_HOST"),
+    "username": os.getenv("FTP_USER"),
+    "password": os.getenv("FTP_PASS"),
+    "base_path": os.getenv("FTP_BASE_PATH", "/domains/st60307.ispot.cc/public_html/aogstorage1/uploads"),
+    "port": int(os.getenv("FTP_PORT", 21)),
+    "passive": os.getenv("FTP_PASSIVE", "True").lower() in ("true", "1", "yes"),
 }
-
