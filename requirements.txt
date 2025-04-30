@@ -12,6 +12,6 @@ python-decouple==3.8
 python-dotenv==1.0.1
 whitenoise==6.9.0
 
-
+django-storages==1.14.6
 
 
