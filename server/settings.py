@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
-    "storages",                # django-storages
+    "storages",
     "api",
 ]
 
@@ -121,39 +121,46 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
 }
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "ROTATE_REFRESH_TOKENS": True,
 }
 
-# CORS & CSRF
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    "CSRF_TRUSTED_ORIGINS",
-    "https://arkofgod.online,https://admin.arkofgod.online,https://ark-of-god-admi.onrender.com"
-).split(",")
-CORS_ALLOWED_ORIGINS = os.getenv(
-    "CORS_ALLOWED_ORIGINS",
-    "https://arkofgod.online,https://admin.arkofgod.online,https://ark-of-god-admi.onrender.com"
-).split(",")
+# CORS & CSRF - Hardcoded
+CSRF_TRUSTED_ORIGINS = [
+    "https://arkofgod.online",
+    "https://admin.arkofgod.online",
+    "https://ark-of-god-admi.onrender.com",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://arkofgod.online",
+    "https://admin.arkofgod.online",
+    "https://ark-of-god-admi.onrender.com",
+]
+
 CORS_ALLOW_CREDENTIALS = True
+
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "authorization",
+    "x-csrftoken",
+    "x-requested-with",
+]
 
 # Security hardening
 if not DEBUG:
-    # Redirect all HTTP to HTTPS
     SECURE_SSL_REDIRECT = True
-    # Trust proxy headers for scheme
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    # HSTS settings for one year
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    # Additional security
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = "DENY"
 else:
-    # In development, do not enforce HTTPS
     SECURE_SSL_REDIRECT = False
 
 # Storage Backend: FTP
