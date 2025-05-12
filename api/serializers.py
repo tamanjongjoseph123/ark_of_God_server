@@ -46,6 +46,12 @@ class TestimonySerializer(serializers.ModelSerializer):
     class Meta:
         model = Testimony
         fields = '__all__'
+        extra_kwargs = {
+            'testimony_video': {
+                'required': False,
+                'allow_null': True
+            }
+        }
 
 class UpcomingEventSerializer(serializers.ModelSerializer):
     class Meta:

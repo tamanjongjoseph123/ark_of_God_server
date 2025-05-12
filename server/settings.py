@@ -23,7 +23,7 @@ ALLOWED_HOSTS = []
 if os.environ.get("ALLOWED_HOSTS"):
     ALLOWED_HOSTS.extend(os.environ.get("ALLOWED_HOSTS").split(","))
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.56.169'])
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.51.169'])
 
 # Applications
 INSTALLED_APPS = [
@@ -74,10 +74,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'server.wsgi.application'
 
-# Database
+#Database
 DATABASES = {
     "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
 }
+
+DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password Validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -107,17 +114,15 @@ AUTH_USER_MODEL = 'api.User'
 
 # Django REST Framework
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
 }
 
 # JWT Settings
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=4),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': True,
 }

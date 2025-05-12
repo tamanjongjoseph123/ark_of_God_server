@@ -65,9 +65,8 @@ class PrayerRequest(models.Model):
 class Testimony(models.Model):
     name = models.CharField(max_length=255)
     testimony_text = models.TextField(null=True, blank=True)
-    testimony_video = CloudinaryField('video', folder='testimonies', null=True, blank=True)
+    testimony_video = CloudinaryField('video', folder='testimonies', resource_type='video', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-
 
     def __str__(self):
         return f"Testimony from {self.name}"

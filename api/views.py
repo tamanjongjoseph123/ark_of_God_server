@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .models import (
@@ -17,11 +17,7 @@ from .serializers import (
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    
-    def get_permissions(self):
-        if self.action == 'create':
-            return [AllowAny()]
-        return [IsAuthenticated()]
+    permission_classes = [AllowAny]
 
 class LoginView(generics.GenericAPIView):
     serializer_class = UserLoginSerializer
@@ -44,20 +40,12 @@ class LoginView(generics.GenericAPIView):
 class ChurchProjectViewSet(viewsets.ModelViewSet):
     queryset = ChurchProject.objects.all()
     serializer_class = ChurchProjectSerializer
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [AllowAny()]
+    permission_classes = [AllowAny]
 
 class VideoViewSet(viewsets.ModelViewSet):
     queryset = Video.objects.all()
     serializer_class = VideoSerializer
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [AllowAny()]
+    permission_classes = [AllowAny]
 
     @action(detail=False, methods=['get'])
     def by_category(self, request):
@@ -71,29 +59,17 @@ class VideoViewSet(viewsets.ModelViewSet):
 class InspirationQuoteViewSet(viewsets.ModelViewSet):
     queryset = InspirationQuote.objects.all().order_by('-created_at')
     serializer_class = InspirationQuoteSerializer
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [AllowAny()]
+    permission_classes = [AllowAny]
 
 class PrayerRequestViewSet(viewsets.ModelViewSet):
     queryset = PrayerRequest.objects.all().order_by('-created_at')
     serializer_class = PrayerRequestSerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return [IsAdminUser()]
-        return [AllowAny()]
+    permission_classes = [AllowAny]
 
 class TestimonyViewSet(viewsets.ModelViewSet):
     queryset = Testimony.objects.all().order_by('-created_at')
     serializer_class = TestimonySerializer
-
-    def get_permissions(self):
-        if self.action in ['list', 'retrieve']:
-            return [AllowAny()]
-        return [IsAuthenticated()]
+    permission_classes = [AllowAny]
 
     # def perform_create(self, serializer):
     #     serializer.save(user=self.request.user)
@@ -101,8 +77,4 @@ class TestimonyViewSet(viewsets.ModelViewSet):
 class UpcomingEventViewSet(viewsets.ModelViewSet):
     queryset = UpcomingEvent.objects.all().order_by('event_date')
     serializer_class = UpcomingEventSerializer
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [AllowAny()] 
+    permission_classes = [AllowAny] 
