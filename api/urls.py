@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ChurchProjectViewSet, VideoViewSet,
     InspirationQuoteViewSet, PrayerRequestViewSet, TestimonyViewSet,
-    UpcomingEventViewSet
+    UpcomingEventViewSet, LoginView
 )
 
 router = DefaultRouter()
@@ -16,6 +16,7 @@ router.register(r'testimonies', TestimonyViewSet)
 router.register(r'upcoming-events', UpcomingEventViewSet)
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('', include(router.urls)),
+    path('login/', LoginView.as_view(), name="login")
 ]
