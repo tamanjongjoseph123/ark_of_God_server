@@ -14,15 +14,16 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise Exception("SECRET_KEY environment variable is not set!")
 
-DEBUG = True
+DEBUG = False
 
 # Hosts
 ALLOWED_HOSTS = [
     "arkofgod.online",
     "admin.arkofgod.online",
     "ark-of-god-admi.onrender.com",
+    "168.231.80.158",
+    "localhost",
     "127.0.0.1",
-    "168.231.80.158",  # ← add this line
 ]
 
 # Applications
@@ -45,7 +46,6 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -131,17 +131,20 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
 }
 
-# CORS & CSRF - Hardcoded
+# CORS & CSRF
 CSRF_TRUSTED_ORIGINS = [
     "https://arkofgod.online",
     "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://arkofgod.online",
     "https://admin.arkofgod.online",
-
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -152,7 +155,6 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-csrftoken",
     "x-requested-with",
 ]
-
 
 # Security hardening
 if not DEBUG:
