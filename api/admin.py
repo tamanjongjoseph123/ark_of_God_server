@@ -31,6 +31,11 @@ class ChurchProjectAdmin(admin.ModelAdmin):
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
 
+    def save_model(self, request, obj, form, change):
+        print("FILES:", request.FILES)
+        print("POST:", request.POST)
+        super().save_model(request, obj, form, change)
+
 @admin.register(Video)
 class VideoAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'created_at')

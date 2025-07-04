@@ -45,7 +45,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -137,17 +136,16 @@ CORS_ALLOW_CREDENTIALS = True
 # CORS & CSRF - Hardcoded
 CSRF_TRUSTED_ORIGINS = [
     "https://arkofgod.online",
-    "https://wwww.arkofgod.online",
+    "https://www.arkofgod.online",  # Fixed typo
     "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
-    "http://168.231.80.158:8000",  # <- for local direct access if needed
+    "http://168.231.80.158:8000",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://arkofgod.online",
     "https://www.arkofgod.online",
     "https://admin.arkofgod.online",
-
 ]
 
 
@@ -168,6 +166,6 @@ FTP_STORAGE_OPTIONS = {
     "username": "aogstorage1@st60307.ispot.cc",
     "password": "_innovate2025",
     "base_path": "/",
-    "port": 23,
+    "port": 21,
     "passive": True,
 }

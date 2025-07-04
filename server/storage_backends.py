@@ -1,7 +1,10 @@
-from ftplib import FTP
+from ftplib import FTP, error_perm
 from django.core.files.storage import Storage
-import os
+from django.core.files.base import File
 from django.conf import settings
+from io import BytesIO
+import os
+from django.core.files.images import ImageFile
 
 class FTPStorage(Storage):
     def __init__(self):
@@ -22,20 +25,36 @@ class FTPStorage(Storage):
         return ftp
 
     def _save(self, name, content):
-        print("Entered here dude")
         ftp = self._connect()
         path_parts = name.split("/")
         for part in path_parts[:-1]:
             try:
                 ftp.mkd(part)
-            except:
+            except error_perm:
                 pass
             ftp.cwd(part)
 
-        content.open()
+        content.open('rb')  # Ensure binary mode
+        content.file.seek(0)  # Ensure pointer is at start
         ftp.storbinary(f"STOR {path_parts[-1]}", content.file)
         ftp.quit()
         return name
+
+    def open(self, name, mode='rb'):
+        ftp = self._connect()
+        path_parts = name.split("/")
+        for part in path_parts[:-1]:
+            ftp.cwd(part)
+
+        file_data = BytesIO()
+        ftp.retrbinary(f"RETR {path_parts[-1]}", file_data.write)
+        ftp.quit()
+        file_data.seek(0)
+
+        # Dynamically choose return type based on file extension
+        if name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')):
+            return ImageFile(file_data, name)
+        return File(file_data, name)
 
     def exists(self, name):
         try:
@@ -45,6 +64,32 @@ class FTPStorage(Storage):
             return True
         except:
             return False
+
+    def delete(self, name):
+        try:
+            ftp = self._connect()
+            ftp.delete(name)
+            ftp.quit()
+        except:
+            pass
+
+    def size(self, name):
+        try:
+            ftp = self._connect()
+            size = ftp.size(name)
+            ftp.quit()
+            return size
+        except:
+            return 0
+
+    def listdir(self, path):
+        ftp = self._connect()
+        ftp.cwd(os.path.join(self.base_path, path))
+        files = []
+        dirs = []
+        ftp.retrlines('LIST', lambda line: (dirs if line.startswith('d') else files).append(line.split()[-1]))
+        ftp.quit()
+        return dirs, files
 
     def url(self, name):
         return f"{settings.MEDIA_URL}{name}"
