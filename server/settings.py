@@ -17,6 +17,7 @@ DEBUG = True
 # Hosts
 ALLOWED_HOSTS = [
     "arkofgod.online",
+    "www.arkofgod.online",
     "admin.arkofgod.online",
     "ark-of-god-admi.onrender.com",
     "127.0.0.1",
@@ -34,7 +35,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
-    "storages",
     "api",
 ]
 
@@ -44,7 +44,6 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -138,13 +137,15 @@ CORS_ALLOW_CREDENTIALS = True
 # CORS & CSRF - Hardcoded
 CSRF_TRUSTED_ORIGINS = [
     "https://arkofgod.online",
+    "https://wwww.arkofgod.online",
     "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
-    "http://168.231.80.158",
+    "http://168.231.80.158:8000",  # <- for local direct access if needed
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://arkofgod.online",
+    "https://www.arkofgod.online",
     "https://admin.arkofgod.online",
 
 ]
