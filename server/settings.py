@@ -20,7 +20,7 @@ ALLOWED_HOSTS = [
     "admin.arkofgod.online",
     "ark-of-god-admi.onrender.com",
     "127.0.0.1",
-    'localhost'
+    'localhost',
     "168.231.80.158",  # ← add this line
 ]
 
