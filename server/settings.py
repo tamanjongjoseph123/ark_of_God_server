@@ -10,20 +10,18 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY
-SECRET_KEY = os.getenv("SECRET_KEY")
-if not SECRET_KEY:
-    raise Exception("SECRET_KEY environment variable is not set!")
+SECRET_KEY = 'django-insecure-@u5*9l!zc3z3ex@v&f$1)w3ym$1pxdqr7zj!61%41k@o0e$+oc'
 
-DEBUG = False
+DEBUG = True
 
 # Hosts
 ALLOWED_HOSTS = [
     "arkofgod.online",
     "admin.arkofgod.online",
     "ark-of-god-admi.onrender.com",
-    "168.231.80.158",
-    "localhost",
     "127.0.0.1",
+    'localhost'
+    "168.231.80.158",  # ← add this line
 ]
 
 # Applications
@@ -46,6 +44,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -78,11 +77,11 @@ WSGI_APPLICATION = "server.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT", 5432),
+        "NAME": 'arkofgod',
+        "USER": 'aoguser',
+        "PASSWORD":'_innovateArkOfGod',
+        "HOST": '168.231.80.158',
+        "PORT": 5432,
     }
 }
 
@@ -96,7 +95,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = os.getenv("TIME_ZONE", "UTC")
+TIME_ZONE = 'Africa/Douala'
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
@@ -131,20 +130,17 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
 }
 
-# CORS & CSRF
+# CORS & CSRF - Hardcoded
 CSRF_TRUSTED_ORIGINS = [
     "https://arkofgod.online",
     "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://arkofgod.online",
     "https://admin.arkofgod.online",
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
+
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -155,6 +151,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "x-csrftoken",
     "x-requested-with",
 ]
+
 
 # Security hardening
 if not DEBUG:
