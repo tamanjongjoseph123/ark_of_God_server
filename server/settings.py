@@ -130,26 +130,23 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
 }
 
+CORS_ALLOW_CREDENTIALS = True
+
+from corsheaders.defaults import default_headers
+CORS_ALLOW_ALL_ORIGINS = False  # Change to False to use specific origins
+CORS_ALLOW_CREDENTIALS = True
 # CORS & CSRF - Hardcoded
 CSRF_TRUSTED_ORIGINS = [
     "https://arkofgod.online",
     "https://admin.arkofgod.online",
     "https://ark-of-god-admi.onrender.com",
+    "http://168.231.80.158",
 ]
 
 CORS_ALLOWED_ORIGINS = [
     "https://arkofgod.online",
     "https://admin.arkofgod.online",
 
-]
-
-CORS_ALLOW_CREDENTIALS = True
-
-from corsheaders.defaults import default_headers
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "authorization",
-    "x-csrftoken",
-    "x-requested-with",
 ]
 
 
