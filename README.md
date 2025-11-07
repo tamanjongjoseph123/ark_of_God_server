@@ -12,6 +12,8 @@ This is the backend API for a church application that serves both a React admin 
 - Testimonies
 - Upcoming events
 - Media file handling
+- Courses and modules management
+- Course videos management
 
 ## Setup Instructions
 
@@ -44,7 +46,7 @@ This is the backend API for a church application that serves both a React admin 
 ### Authentication
 
 #### Login
-- **URL**: `/api/login/`
+- **URL**: `/api/auth/login`
 - **Method**: `POST`
 - **Request Body**:
   ```json
@@ -60,7 +62,6 @@ This is the backend API for a church application that serves both a React admin 
     "refresh": "string",
     "user": {
       "id": "integer",
-      "name": "string",
       "country": "string",
       "email": "string",
       "contact": "string",
@@ -76,7 +77,7 @@ This is the backend API for a church application that serves both a React admin 
   ```
 
 #### Refresh Token
-- **URL**: `/api/token/refresh/`
+- **URL**: `/api/token/refresh`
 - **Method**: `POST`
 - **Request Body**:
   ```json
@@ -127,7 +128,6 @@ This is the backend API for a church application that serves both a React admin 
   [
     {
       "id": "integer",
-      "name": "string",
       "country": "string",
       "email": "string",
       "contact": "string",

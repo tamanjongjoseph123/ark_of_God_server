@@ -23,7 +23,7 @@ ALLOWED_HOSTS = []
 if os.environ.get("ALLOWED_HOSTS"):
     ALLOWED_HOSTS.extend(os.environ.get("ALLOWED_HOSTS").split(","))
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.51.169'])
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '10.51.148.169'])
 
 # Applications
 INSTALLED_APPS = [
@@ -114,7 +114,9 @@ AUTH_USER_MODEL = 'api.User'
 
 # Django REST Framework
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
@@ -131,12 +133,25 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-# Cloudinary Config
-cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
-    secure=True
-)
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# Storage Backend: FTP
+STORAGES = {
+    "default": {
+        "BACKEND": "server.storage_backends.FTPStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+FTP_STORAGE_OPTIONS = {
+    "host": "st60307.ispot.cc",
+    "username": "nostress@st60307.ispot.cc",
+    "password": "nostress2025",
+    "base_path": "/",
+    "port": 21,
+    "passive": True,
+}
+# Media (uploads)
+MEDIA_URL = "https://st60307.ispot.cc/nostress/"
+MEDIA_ROOT = BASE_DIR / "media"
