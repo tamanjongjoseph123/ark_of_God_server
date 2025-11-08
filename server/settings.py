@@ -137,6 +137,14 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 
+# CORS Configuration
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    'https://b99e3c29.ark-of-god-admin-new.pages.dev/'
+]
+
+
 # Storage Backend: FTP
 STORAGES = {
     "default": {
