@@ -1,42 +1,47 @@
-from rest_framework import viewsets, permissions, status, generics
+from rest_framework import viewsets, status, permissions, generics
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import make_password
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import (
-    User, ChurchProject, Video, InspirationQuote,
-    PrayerRequest, Testimony, UpcomingEvent, Course, Module, CourseVideo, Comment, Devotion
+    User, ChurchProject, Video, InspirationQuote, 
+    PrayerRequest, Testimony, UpcomingEvent,
+    Course, Module, CourseVideo, Comment, Devotion, CourseApplication, Stream, PrayerRoom
 )
 from .serializers import (
-    UserSerializer, ChurchProjectSerializer, VideoSerializer,
-    InspirationQuoteSerializer, PrayerRequestSerializer,
-    TestimonySerializer, UpcomingEventSerializer, UserLoginSerializer,
-    CourseSerializer, ModuleSerializer, CourseVideoSerializer, CommentSerializer, DevotionSerializer
+    UserSerializer, ChurchProjectSerializer, VideoSerializer, 
+    InspirationQuoteSerializer, PrayerRequestSerializer, TestimonySerializer,
+    UpcomingEventSerializer, CourseSerializer, ModuleSerializer, 
+    CourseVideoSerializer, CommentSerializer, DevotionSerializer, 
+    CourseApplicationSerializer, StreamSerializer, PrayerRoomSerializer, UserLoginSerializer
 )
+
+class LoginView(generics.GenericAPIView):
+    serializer_class = UserLoginSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        
+        if user is not None and user.is_staff:  # Only allow admin users
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': UserSerializer(user).data,
+                'is_admin': True
+            })
+        return Response({'error': 'Invalid credentials or not an admin user'}, status=400)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
-
-class LoginView(generics.GenericAPIView):
-    serializer_class = UserLoginSerializer
-    permission_classes = (AllowAny,)
-
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        
-        if user:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'token': str(refresh.access_token),
-                'refresh': str(refresh),
-                'user': UserSerializer(user).data
-            })
-        return Response({'error': 'Invalid credentials'}, status=400)
 
 class ChurchProjectViewSet(viewsets.ModelViewSet):
     queryset = ChurchProject.objects.all()
@@ -207,3 +212,187 @@ class DevotionViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(today_devotions, many=True)
             return Response(serializer.data)
         return Response({'detail': 'No devotions for today'}, status=404)
+
+class CourseApplicationViewSet(viewsets.ModelViewSet):
+    queryset = CourseApplication.objects.all().order_by('-created_at')
+    serializer_class = CourseApplicationSerializer
+    
+    def get_permissions(self):
+        """Allow anyone to create applications, but only admins can view/update"""
+        if self.action in ['create', 'login']:
+            return [AllowAny()]
+        return [permissions.IsAdminUser()]
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        
+        # Filter by application type
+        application_type = self.request.query_params.get('application_type')
+        if application_type:
+            qs = qs.filter(application_type=application_type)
+        
+        # Filter by status
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        
+        return qs
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def approve(self, request, pk=None):
+        """Approve an application and create user account"""
+        application = self.get_object()
+        
+        if application.status != 'pending':
+            return Response(
+                {'detail': f'Application is already {application.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create user account
+        try:
+            # Create the user with the password from the application
+            # Since the password is already hashed, we need to create the user manually
+            user = User(
+                username=application.username,
+                email=application.email,
+                country=application.country if hasattr(application, 'country') else '',
+                contact=application.phone_number,
+                name=application.full_name
+            )
+            # Set the password directly (it's already hashed)
+            user.password = application.password
+            user.save()
+            
+            # Update application
+            application.status = 'approved'
+            application.user = user
+            application.reviewed_by = request.user
+            from django.utils import timezone
+            application.reviewed_at = timezone.now()
+            application.save()
+            
+            serializer = self.get_serializer(application)
+            return Response({
+                'detail': 'Application approved successfully',
+                'application': serializer.data
+            })
+        except Exception as e:
+            return Response(
+                {'detail': f'Error creating user: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def reject(self, request, pk=None):
+        """Reject an application"""
+        application = self.get_object()
+        
+        if application.status != 'pending':
+            return Response(
+                {'detail': f'Application is already {application.status}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        application.status = 'rejected'
+        application.reviewed_by = request.user
+        from django.utils import timezone
+        application.reviewed_at = timezone.now()
+        application.save()
+        
+        serializer = self.get_serializer(application)
+        return Response({
+            'detail': 'Application rejected',
+            'application': serializer.data
+        })
+    
+    @action(detail=False, methods=['get'])
+    def pending(self, request):
+        """Get all pending applications"""
+        pending_apps = self.queryset.filter(status='pending')
+        serializer = self.get_serializer(pending_apps, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def approved(self, request):
+        """Get all approved applications"""
+        approved_apps = self.queryset.filter(status='approved')
+        serializer = self.get_serializer(approved_apps, many=True)
+        return Response(serializer.data)
+        
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        """Login for approved applicants"""
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        if not username or not password:
+            return Response(
+                {'error': 'Please provide both username and password'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Check if application exists and is approved
+        try:
+            application = CourseApplication.objects.get(username=username)
+            if application.status != 'approved':
+                return Response(
+                    {'error': 'Your application is not yet approved'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+                
+            # If we have a user linked to the application, try to authenticate with that user
+            if application.user:
+                user = authenticate(request, username=application.user.username, password=password)
+                if user is not None:
+                    # Generate JWT token
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                        'user': UserSerializer(user).data,
+                        'application_type': application.application_type
+                    })
+                
+                # If authentication failed, check if it's a password issue
+                if User.objects.filter(username=username).exists():
+                    return Response(
+                        {'error': 'Incorrect password'},
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+                
+                return Response(
+                    {'error': 'Authentication failed'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+                
+        except CourseApplication.DoesNotExist:
+            return Response(
+                {'error': 'No application found with this username'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
+        # Fallback to standard authentication if no user is linked
+        user = authenticate(request, username=username, password=password)
+        
+        if user is None:
+            # Check if user exists but password is wrong
+            if User.objects.filter(username=username).exists():
+                return Response(
+                    {'error': 'Incorrect password'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            return Response(
+                {'error': 'User account not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Generate JWT token
+        refresh = RefreshToken.for_user(user)
+        
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': UserSerializer(user).data,
+            'application_type': application.application_type
+        })

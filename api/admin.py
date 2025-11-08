@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
-    User, ChurchProject, Video, InspirationQuote,
-    PrayerRequest, Testimony, UpcomingEvent, Course, Module, CourseVideo, Comment, Devotion
+    User, ChurchProject, Video, InspirationQuote, 
+    PrayerRequest, Testimony, UpcomingEvent, 
+    Course, Module, CourseVideo, Comment, Devotion, CourseApplication, Stream, PrayerRoom
 )
+from django.utils import timezone
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
@@ -54,10 +56,31 @@ class PrayerRequestAdmin(admin.ModelAdmin):
 
 @admin.register(Testimony)
 class TestimonyAdmin(admin.ModelAdmin):
-    list_display = ('name', 'created_at')
+    list_display = ('name', 'created_at', 'video_preview')
     search_fields = ('name', 'testimony_text')
     list_filter = ('created_at',)
     date_hierarchy = 'created_at'
+    readonly_fields = ('video_preview',)
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'testimony_text')
+        }),
+        ('Video Testimony', {
+            'fields': ('testimony_video', 'video_preview')
+        }),
+    )
+
+    def video_preview(self, obj):
+        if obj.testimony_video:
+            video_html = (
+                '<video width="320" height="240" controls>'
+                '<source src="{}" type="video/mp4">'
+                'Your browser does not support the video tag.'
+                '</video>'
+            )
+            return format_html(video_html, obj.testimony_video.url)
+        return "No video uploaded"
+    video_preview.short_description = 'Video Preview'
 
 @admin.register(UpcomingEvent)
 class UpcomingEventAdmin(admin.ModelAdmin):
@@ -120,3 +143,127 @@ class DevotionAdmin(admin.ModelAdmin):
             'description': 'Provide text_content for text devotions or youtube_url for video devotions'
         }),
     )
+
+@admin.register(CourseApplication)
+class CourseApplicationAdmin(admin.ModelAdmin):
+    list_display = ('full_name', 'application_type', 'status', 'email', 'phone_number', 'created_at')
+    list_filter = ('application_type', 'status', 'created_at')
+    search_fields = ('full_name', 'email', 'username', 'phone_number')
+    date_hierarchy = 'created_at'
+    readonly_fields = ('created_at', 'updated_at', 'password')
+    
+    fieldsets = (
+        ('Application Details', {
+            'fields': ('application_type', 'status')
+        }),
+        ('Personal Information', {
+            'fields': ('full_name', 'email', 'phone_number', 'your_interest', 'your_goals')
+        }),
+        ('Account Credentials', {
+            'fields': ('username', 'password'),
+            'description': 'Password is hashed and cannot be viewed'
+        }),
+        ('Review Information', {
+            'fields': ('user', 'reviewed_by', 'reviewed_at')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+    
+    actions = ['approve_applications', 'reject_applications']
+    
+    def approve_applications(self, request, queryset):
+        """Bulk approve applications"""
+        from django.utils import timezone
+        approved_count = 0
+        
+        for application in queryset.filter(status='pending'):
+            try:
+                # Create user account
+                user = User.objects.create_user(
+                    username=application.username,
+                    email=application.email,
+                    password=application.password,
+                    country='',
+                    contact=application.phone_number
+                )
+                
+                application.status = 'approved'
+                application.user = user
+                application.reviewed_by = request.user
+                application.reviewed_at = timezone.now()
+                application.save()
+                approved_count += 1
+            except Exception as e:
+                self.message_user(request, f'Error approving {application.full_name}: {str(e)}', level='ERROR')
+        
+        self.message_user(request, f'{approved_count} application(s) approved successfully')
+    approve_applications.short_description = 'Approve selected applications'
+    
+    def reject_applications(self, request, queryset):
+        """Bulk reject applications"""
+        from django.utils import timezone
+        rejected_count = queryset.filter(status='pending').update(
+            status='rejected',
+            reviewed_by=request.user,
+            reviewed_at=timezone.now()
+        )
+        self.message_user(request, f'{rejected_count} application(s) rejected')
+    reject_applications.short_description = 'Reject selected applications'
+
+@admin.register(PrayerRoom)
+class PrayerRoomAdmin(admin.ModelAdmin):
+    list_display = ('title', 'is_active', 'current_topic', 'youtube_url', 'started_at', 'ended_at')
+    list_filter = ('is_active',)
+    search_fields = ('title', 'current_topic', 'youtube_url')
+    readonly_fields = ('is_active', 'created_at', 'updated_at', 'started_at', 'ended_at')
+    fieldsets = (
+        ('Prayer Room Info', {
+            'fields': ('title', 'description', 'current_topic')
+        }),
+        ('Streaming', {
+            'fields': ('youtube_url', 'is_active', 'started_at', 'ended_at')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    actions = ['start_prayer_room', 'end_prayer_room']
+    
+    def has_add_permission(self, request):
+        # Only allow one prayer room instance
+        return not PrayerRoom.objects.exists()
+        
+    def start_prayer_room(self, request, queryset):
+        """Admin action to start the prayer room"""
+        prayer_room = PrayerRoom.get_prayer_room()
+        if prayer_room.is_active:
+            self.message_user(request, 'A prayer room is already active', level='error')
+            return
+            
+        if not prayer_room.youtube_url:
+            self.message_user(request, 'Please set a YouTube URL before starting', level='error')
+            return
+            
+        prayer_room.is_active = True
+        prayer_room.started_at = timezone.now()
+        prayer_room.ended_at = None
+        prayer_room.save()
+        self.message_user(request, 'Prayer room started successfully')
+    
+    def end_prayer_room(self, request, queryset):
+        """Admin action to end the prayer room"""
+        prayer_room = PrayerRoom.get_prayer_room()
+        if not prayer_room.is_active:
+            self.message_user(request, 'No active prayer room to end', level='error')
+            return
+            
+        prayer_room.is_active = False
+        prayer_room.ended_at = timezone.now()
+        prayer_room.save()
+        self.message_user(request, 'Prayer room ended successfully')
+        
+    start_prayer_room.short_description = 'Start prayer room'
+    end_prayer_room.short_description = 'End prayer room'

@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.core.validators import URLValidator
 
 
 class User(AbstractUser):
@@ -51,6 +52,35 @@ class InspirationQuote(models.Model):
     def __str__(self):
         return self.quote[:50]
 
+
+class Stream(models.Model):
+    STREAM_TYPE_CHOICES = [
+        ('live', 'YouTube Live'),
+        ('regular', 'YouTube Video'),
+    ]
+    
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    stream_type = models.CharField(max_length=10, choices=STREAM_TYPE_CHOICES, default='live')
+    youtube_url = models.URLField(
+        validators=[URLValidator()],
+        help_text="URL of the YouTube video or live stream"
+    )
+    is_active = models.BooleanField(default=False)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        status = 'Active' if self.is_active else 'Inactive'
+        return f"{self.title} - {status} ({self.get_stream_type_display()})"
+        
+    def clean(self):
+        if not self.youtube_url:
+            raise ValidationError('YouTube URL is required')
+        # You might want to add additional validation for YouTube URL format
+
 class PrayerRequest(models.Model):
     name = models.CharField(max_length=255)
     email = models.EmailField()
@@ -62,10 +92,18 @@ class PrayerRequest(models.Model):
     def __str__(self):
         return f"Prayer Request from {self.name}"
 
+def testimony_video_upload_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/testimonies/<filename>
+    return f'testimonies/{filename}'
+
 class Testimony(models.Model):
     name = models.CharField(max_length=255)
     testimony_text = models.TextField(null=True, blank=True)
-    testimony_video = models.ImageField(upload_to='testimonies/', max_length=500)
+    testimony_video = models.FileField(
+        upload_to=testimony_video_upload_path,
+        max_length=500,
+        help_text='Upload a video file (MP4, WebM, OGG)'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -90,6 +128,49 @@ class UpcomingEvent(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.get_event_status_display()}" 
+
+class PrayerRoom(models.Model):
+    """Singleton model to represent the prayer room with YouTube streaming."""
+    title = models.CharField(max_length=200, default="Prayer Room", help_text="Title of the prayer room")
+    description = models.TextField(blank=True, null=True, help_text="Description of the prayer room")
+    is_active = models.BooleanField(default=False, help_text="Whether the prayer room is currently active")
+    youtube_url = models.URLField(
+        validators=[URLValidator()],
+        help_text="YouTube URL for the prayer stream (live or recorded)",
+        blank=True,
+        null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    current_topic = models.CharField(max_length=200, default="General Prayer", help_text="Current prayer topic or focus")
+
+    class Meta:
+        verbose_name = 'Prayer Room'
+        verbose_name_plural = 'Prayer Room'
+
+    def __str__(self):
+        return f"Prayer Room ({'Active' if self.is_active else 'Inactive'})"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if not self.pk and PrayerRoom.objects.exists():
+            # Update existing instance instead of creating new one
+            existing = PrayerRoom.objects.first()
+            existing.title = self.title
+            existing.description = self.description
+            existing.current_topic = self.current_topic
+            existing.youtube_url = self.youtube_url
+            return existing.save(*args, **kwargs)
+        return super().save(*args, **kwargs)
+
+    @classmethod
+    def get_prayer_room(cls):
+        """Get the single prayer room instance, create it if it doesn't exist"""
+        if not cls.objects.exists():
+            return cls.objects.create()
+        return cls.objects.first() 
 
 # Courses/Modules/Videos hierarchy
 class Course(models.Model):
@@ -189,3 +270,47 @@ class Devotion(models.Model):
                     video_id = match.group(1)
                     return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
         return None
+
+class CourseApplication(models.Model):
+    APPLICATION_TYPE_CHOICES = [
+        ('sons_of_john_chi', 'Sons of John Chi'),
+        ('mentorship', 'Mentorship'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    
+    # Application details
+    application_type = models.CharField(max_length=20, choices=APPLICATION_TYPE_CHOICES)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    
+    # Personal information
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=20)
+    your_interest = models.TextField(help_text="Why are you interested in this course?")
+    your_goals = models.TextField(help_text="What are your goals?")
+    
+    # User credentials
+    username = models.CharField(max_length=255, unique=True)
+    password = models.CharField(max_length=255, help_text="Password will be hashed")
+    
+    # Related user (created after approval)
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='application')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_applications')
+    
+    class Meta:
+        ordering = ['-created_at']
+        # Allow same email for different application types, but not for the same type
+        unique_together = [['email', 'application_type']]
+    
+    def __str__(self):
+        return f"{self.full_name} - {self.get_application_type_display()} ({self.get_status_display()})"
