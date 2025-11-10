@@ -1,0 +1,40 @@
+INFO 2025-11-10 02:29:08,737 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: tgge - ger
+INFO 2025-11-10 02:29:08,737 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 02:29:09,052 views [NOTIFICATION] Found 0 device tokens
+ERROR 2025-11-10 02:29:09,055 views [NOTIFICATION] No device tokens available
+INFO 2025-11-10 02:34:13,636 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: dqed - dqwd
+INFO 2025-11-10 02:34:13,637 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 02:34:13,976 views [NOTIFICATION] Found 0 device tokens
+ERROR 2025-11-10 02:34:13,982 views [NOTIFICATION] No device tokens available
+INFO 2025-11-10 02:37:48,375 views [NOTIFICATION] Received device token registration request
+DEBUG 2025-11-10 02:37:48,376 views [NOTIFICATION] Request data: {'token': 'ExponentPushToken[927zTEFxat5hCamWcEXGy4]'}
+INFO 2025-11-10 02:37:48,379 views [NOTIFICATION] Processing token: ExponentPu...
+INFO 2025-11-10 02:37:52,521 views [NOTIFICATION] Successfully registered device token: ExponentPu...
+INFO 2025-11-10 02:39:26,463 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: fr - fwf
+INFO 2025-11-10 02:39:26,464 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 02:39:26,821 views [NOTIFICATION] Found 1 device tokens
+INFO 2025-11-10 02:39:26,821 views [NOTIFICATION] 1 valid tokens after filtering
+INFO 2025-11-10 02:39:26,822 views [NOTIFICATION] Sending notifications to Expo's push service
+INFO 2025-11-10 02:39:26,822 views [NOTIFICATION] Processing chunk 1 with 1 messages
+INFO 2025-11-10 02:46:06,962 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: yufgew - dew
+INFO 2025-11-10 02:46:08,057 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 02:46:08,508 views [NOTIFICATION] Found 1 device tokens
+INFO 2025-11-10 02:46:08,597 views [NOTIFICATION] 1 valid tokens after filtering
+INFO 2025-11-10 02:46:08,604 views [NOTIFICATION] Sending notifications to Expo's push service
+INFO 2025-11-10 02:46:08,615 views [NOTIFICATION] Processing chunk 1 with 1 messages
+INFO 2025-11-10 02:47:30,590 views [NOTIFICATION] Received device token registration request
+DEBUG 2025-11-10 02:47:30,592 views [NOTIFICATION] Request data: {'token': 'ExponentPushToken[927zTEFxat5hCamWcEXGy4]'}
+INFO 2025-11-10 02:47:30,594 views [NOTIFICATION] Processing token: ExponentPu...
+INFO 2025-11-10 02:47:35,370 views [NOTIFICATION] Successfully updated device token: ExponentPu...
+INFO 2025-11-10 02:48:01,213 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: euyre - fgerg
+INFO 2025-11-10 02:48:01,220 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 02:48:01,782 views [NOTIFICATION] Found 1 device tokens
+INFO 2025-11-10 02:48:01,784 views [NOTIFICATION] 1 valid tokens after filtering
+INFO 2025-11-10 02:48:01,784 views [NOTIFICATION] Sending notifications to Expo's push service
+INFO 2025-11-10 02:48:01,786 views [NOTIFICATION] Processing chunk 1 with 1 messages
+INFO 2025-11-10 02:48:35,680 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: fuf - fwfhjw
+INFO 2025-11-10 02:48:35,682 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 02:48:36,166 views [NOTIFICATION] Found 1 device tokens
+INFO 2025-11-10 02:48:36,166 views [NOTIFICATION] 1 valid tokens after filtering
+INFO 2025-11-10 02:48:36,167 views [NOTIFICATION] Sending notifications to Expo's push service
+INFO 2025-11-10 02:48:36,167 views [NOTIFICATION] Processing chunk 1 with 1 messages

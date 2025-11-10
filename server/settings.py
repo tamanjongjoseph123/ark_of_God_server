@@ -1,4 +1,5 @@
 import os
+import logging
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
@@ -8,6 +9,61 @@ import cloudinary.api
 
 # Paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Ensure logs directory exists
+LOG_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOG_DIR, exist_ok=True)
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOG_DIR, 'notifications.log'),
+            'formatter': 'verbose'
+        },
+    },
+    'loggers': {
+        'notifications': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'api': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+# Configure root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(os.path.join(LOG_DIR, 'django.log'))
+    ]
+)
 
 # Load .env only locally
 if os.environ.get('RENDER', None) is None:
@@ -38,6 +94,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt.token_blacklist',
     'api',
+    'notifications',
     'cloudinary',
     'cloudinary_storage',
 ]
@@ -133,17 +190,17 @@ SIMPLE_JWT = {
 }
 
 # CORS
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOW_CREDENTIALS = True
-
 
 # CORS Configuration
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://localhost:19006",
+    "exp://192.168.1.100:19000",  # Replace with your actual IP
     'https://b99e3c29.ark-of-god-admin-new.pages.dev'
 ]
-
 
 # Storage Backend: FTP
 STORAGES = {

@@ -5,6 +5,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from rest_framework_simplejwt.tokens import RefreshToken
+from notifications.views import send_push_notification
+from django.utils import timezone
 
 from .models import (
     User, ChurchProject, Video, InspirationQuote, 
@@ -183,6 +185,35 @@ class DevotionViewSet(viewsets.ModelViewSet):
     serializer_class = DevotionSerializer
     permission_classes = [IsAdminOrReadOnly]
 
+    def perform_create(self, serializer):
+        # Save the devotion first
+        devotion = serializer.save()
+        
+        # Prepare notification data
+        title = "New Devotion Available"
+        # Use the first 50 characters of the description as a preview
+        preview = (devotion.description[:47] + '...') if len(devotion.description) > 50 else devotion.description
+        body = f"{devotion.title} - {preview}"
+        
+        data = {
+            'type': 'new_devotion',
+            'devotion_id': str(devotion.id),
+            'title': devotion.title,
+            'description': devotion.description,
+            'content_type': devotion.content_type,
+            'devotion_date': devotion.devotion_date.isoformat() if devotion.devotion_date else None,
+            'created_at': timezone.now().isoformat(),
+        }
+        
+        # Add video URL if this is a video devotion
+        if devotion.content_type == 'video' and devotion.youtube_url:
+            data['youtube_url'] = devotion.youtube_url
+        
+        # Send push notification
+        send_push_notification(title, body, data)
+        
+        return devotion
+
     def get_queryset(self):
         qs = super().get_queryset()
         
@@ -206,7 +237,9 @@ class DevotionViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def today(self, request):
         """Get today's devotions (can be multiple)"""
-        from datetime import date as dt_date
+        today_devotions = self.queryset.filter(devotion_date=timezone.now().date())
+        serializer = self.get_serializer(today_devotions, many=True)
+        return Response(serializer.data)
         today_devotions = self.queryset.filter(devotion_date=dt_date.today())
         if today_devotions.exists():
             serializer = self.get_serializer(today_devotions, many=True)

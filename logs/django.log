@@ -1,0 +1,41 @@
+2025-11-10 02:28:29,711 - django.utils.autoreload - INFO - Watching for file changes with StatReloader
+2025-11-10 02:29:08,737 - notifications.views - INFO - [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: tgge - ger
+2025-11-10 02:29:08,737 - notifications.views - INFO - [NOTIFICATION] No tokens provided, fetching all registered device tokens
+2025-11-10 02:29:09,052 - notifications.views - INFO - [NOTIFICATION] Found 0 device tokens
+2025-11-10 02:29:09,055 - notifications.views - ERROR - [NOTIFICATION] No device tokens available
+2025-11-10 02:34:13,636 - notifications.views - INFO - [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: dqed - dqwd
+2025-11-10 02:34:13,637 - notifications.views - INFO - [NOTIFICATION] No tokens provided, fetching all registered device tokens
+2025-11-10 02:34:13,976 - notifications.views - INFO - [NOTIFICATION] Found 0 device tokens
+2025-11-10 02:34:13,982 - notifications.views - ERROR - [NOTIFICATION] No device tokens available
+2025-11-10 02:37:48,375 - notifications.views - INFO - [NOTIFICATION] Received device token registration request
+2025-11-10 02:37:48,376 - notifications.views - DEBUG - [NOTIFICATION] Request data: {'token': 'ExponentPushToken[927zTEFxat5hCamWcEXGy4]'}
+2025-11-10 02:37:48,379 - notifications.views - INFO - [NOTIFICATION] Processing token: ExponentPu...
+2025-11-10 02:37:52,521 - notifications.views - INFO - [NOTIFICATION] Successfully registered device token: ExponentPu...
+2025-11-10 02:39:26,463 - notifications.views - INFO - [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: fr - fwf
+2025-11-10 02:39:26,464 - notifications.views - INFO - [NOTIFICATION] No tokens provided, fetching all registered device tokens
+2025-11-10 02:39:26,821 - notifications.views - INFO - [NOTIFICATION] Found 1 device tokens
+2025-11-10 02:39:26,821 - notifications.views - INFO - [NOTIFICATION] 1 valid tokens after filtering
+2025-11-10 02:39:26,822 - notifications.views - INFO - [NOTIFICATION] Sending notifications to Expo's push service
+2025-11-10 02:39:26,822 - notifications.views - INFO - [NOTIFICATION] Processing chunk 1 with 1 messages
+2025-11-10 02:46:06,962 - notifications.views - INFO - [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: yufgew - dew
+2025-11-10 02:46:08,057 - notifications.views - INFO - [NOTIFICATION] No tokens provided, fetching all registered device tokens
+2025-11-10 02:46:08,508 - notifications.views - INFO - [NOTIFICATION] Found 1 device tokens
+2025-11-10 02:46:08,597 - notifications.views - INFO - [NOTIFICATION] 1 valid tokens after filtering
+2025-11-10 02:46:08,604 - notifications.views - INFO - [NOTIFICATION] Sending notifications to Expo's push service
+2025-11-10 02:46:08,615 - notifications.views - INFO - [NOTIFICATION] Processing chunk 1 with 1 messages
+2025-11-10 02:47:30,590 - notifications.views - INFO - [NOTIFICATION] Received device token registration request
+2025-11-10 02:47:30,592 - notifications.views - DEBUG - [NOTIFICATION] Request data: {'token': 'ExponentPushToken[927zTEFxat5hCamWcEXGy4]'}
+2025-11-10 02:47:30,594 - notifications.views - INFO - [NOTIFICATION] Processing token: ExponentPu...
+2025-11-10 02:47:35,370 - notifications.views - INFO - [NOTIFICATION] Successfully updated device token: ExponentPu...
+2025-11-10 02:48:01,213 - notifications.views - INFO - [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: euyre - fgerg
+2025-11-10 02:48:01,220 - notifications.views - INFO - [NOTIFICATION] No tokens provided, fetching all registered device tokens
+2025-11-10 02:48:01,782 - notifications.views - INFO - [NOTIFICATION] Found 1 device tokens
+2025-11-10 02:48:01,784 - notifications.views - INFO - [NOTIFICATION] 1 valid tokens after filtering
+2025-11-10 02:48:01,784 - notifications.views - INFO - [NOTIFICATION] Sending notifications to Expo's push service
+2025-11-10 02:48:01,786 - notifications.views - INFO - [NOTIFICATION] Processing chunk 1 with 1 messages
+2025-11-10 02:48:35,680 - notifications.views - INFO - [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: fuf - fwfhjw
+2025-11-10 02:48:35,682 - notifications.views - INFO - [NOTIFICATION] No tokens provided, fetching all registered device tokens
+2025-11-10 02:48:36,166 - notifications.views - INFO - [NOTIFICATION] Found 1 device tokens
+2025-11-10 02:48:36,166 - notifications.views - INFO - [NOTIFICATION] 1 valid tokens after filtering
+2025-11-10 02:48:36,167 - notifications.views - INFO - [NOTIFICATION] Sending notifications to Expo's push service
+2025-11-10 02:48:36,167 - notifications.views - INFO - [NOTIFICATION] Processing chunk 1 with 1 messages

@@ -27,5 +27,6 @@ def list_routes(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('api/notifications/', include('notifications.urls')),
     path('__debug__/urls/', list_routes),  # Debug URL
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
