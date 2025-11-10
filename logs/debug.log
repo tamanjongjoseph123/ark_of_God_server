@@ -1,0 +1,59 @@
+INFO 2025-11-10 16:06:31,479 autoreload Watching for file changes with StatReloader
+INFO 2025-11-10 16:06:45,913 autoreload C:\Users\TJ Rash\Desktop\ark_of_God_server\api\views.py changed, reloading.
+INFO 2025-11-10 16:06:48,189 autoreload Watching for file changes with StatReloader
+INFO 2025-11-10 16:06:54,605 autoreload C:\Users\TJ Rash\Desktop\ark_of_God_server\api\views.py changed, reloading.
+INFO 2025-11-10 16:06:56,671 autoreload Watching for file changes with StatReloader
+INFO 2025-11-10 16:09:02,664 basehttp "OPTIONS /api/videos/ HTTP/1.1" 200 0
+WARNING 2025-11-10 16:09:02,813 log Unauthorized: /api/videos/
+WARNING 2025-11-10 16:09:02,814 basehttp "GET /api/videos/ HTTP/1.1" 401 172
+WARNING 2025-11-10 16:09:02,818 log Unauthorized: /api/videos/
+INFO 2025-11-10 16:09:02,847 basehttp - Broken pipe from ('10.51.148.169', 52268)
+INFO 2025-11-10 16:09:09,306 basehttp "OPTIONS /api/auth/login/ HTTP/1.1" 200 0
+INFO 2025-11-10 16:09:12,749 basehttp "POST /api/auth/login/ HTTP/1.1" 200 606
+INFO 2025-11-10 16:09:14,748 basehttp "OPTIONS /api/devotions/ HTTP/1.1" 200 0
+INFO 2025-11-10 16:09:17,576 basehttp "GET /api/devotions/ HTTP/1.1" 200 1026
+INFO 2025-11-10 16:09:20,247 basehttp "GET /api/devotions/ HTTP/1.1" 200 1026
+INFO 2025-11-10 16:09:21,258 basehttp "OPTIONS /api/devotions/16/ HTTP/1.1" 200 0
+INFO 2025-11-10 16:09:25,179 basehttp "DELETE /api/devotions/16/ HTTP/1.1" 204 0
+INFO 2025-11-10 16:09:26,889 basehttp "OPTIONS /api/devotions/15/ HTTP/1.1" 200 0
+INFO 2025-11-10 16:09:29,733 basehttp "DELETE /api/devotions/15/ HTTP/1.1" 204 0
+INFO 2025-11-10 16:09:30,829 basehttp "OPTIONS /api/devotions/17/ HTTP/1.1" 200 0
+INFO 2025-11-10 16:09:33,913 basehttp "DELETE /api/devotions/17/ HTTP/1.1" 204 0
+INFO 2025-11-10 16:09:43,030 views Starting to create a new devotion
+INFO 2025-11-10 16:09:43,411 views Devotion created successfully with ID: 19
+INFO 2025-11-10 16:09:43,414 views Sending push notification...
+DEBUG 2025-11-10 16:09:43,419 views Notification details - Title: New Devotion Available, Body: tghtr - gtg
+DEBUG 2025-11-10 16:09:43,420 views Notification data: {'type': 'new_devotion', 'devotion_id': '19', 'title': 'tghtr', 'description': 'gtg', 'content_type': 'text', 'devotion_date': '2025-11-10', 'created_at': '2025-11-10T15:09:43.412866+00:00'}
+INFO 2025-11-10 16:09:43,421 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: tghtr - gtg
+INFO 2025-11-10 16:09:43,422 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 16:09:43,810 views [NOTIFICATION] Found 1 device tokens
+INFO 2025-11-10 16:09:43,812 views [NOTIFICATION] 1 valid tokens after filtering
+INFO 2025-11-10 16:09:43,817 views [NOTIFICATION] Sending notifications to Expo's push service
+INFO 2025-11-10 16:09:43,819 views [NOTIFICATION] Processing chunk 1 with 1 messages
+INFO 2025-11-10 16:09:45,698 views Notification send result: {'status': 'error', 'success_count': 0, 'error_count': 1, 'total_sent': 1, 'errors': [{'message': 'Unexpected response: 200', 'details': '{"data":[{"status":"ok","id":"019a6e50-f2da-7765-9b99-386da3220f9d"}]}'}], 'message': 'Sent 0 notifications with 1 errors'}
+ERROR 2025-11-10 16:09:45,700 views Failed to send notifications to 1 devices
+ERROR 2025-11-10 16:09:45,701 views Notification error: {'message': 'Unexpected response: 200', 'details': '{"data":[{"status":"ok","id":"019a6e50-f2da-7765-9b99-386da3220f9d"}]}'}
+INFO 2025-11-10 16:09:45,705 basehttp "POST /api/devotions/ HTTP/1.1" 201 202
+INFO 2025-11-10 16:09:47,987 basehttp "GET /api/devotions/today/ HTTP/1.1" 200 608
+INFO 2025-11-10 16:09:47,988 basehttp "GET /api/devotions/ HTTP/1.1" 200 608
+INFO 2025-11-10 16:09:48,366 basehttp "GET /api/devotions/ HTTP/1.1" 200 608
+INFO 2025-11-10 16:10:42,651 autoreload C:\Users\TJ Rash\Desktop\ark_of_God_server\notifications\views.py changed, reloading.
+INFO 2025-11-10 16:10:45,486 autoreload Watching for file changes with StatReloader
+INFO 2025-11-10 16:11:15,377 views Starting to create a new devotion
+INFO 2025-11-10 16:11:15,745 views Devotion created successfully with ID: 20
+INFO 2025-11-10 16:11:15,747 views Sending push notification...
+DEBUG 2025-11-10 16:11:15,760 views Notification details - Title: New Devotion Available, Body: sdf - fe
+DEBUG 2025-11-10 16:11:15,761 views Notification data: {'type': 'new_devotion', 'devotion_id': '20', 'title': 'sdf', 'description': 'fe', 'content_type': 'text', 'devotion_date': '2025-11-10', 'created_at': '2025-11-10T15:11:15.747434+00:00'}
+INFO 2025-11-10 16:11:15,762 views [NOTIFICATION] Starting to send notification. Title: New Devotion Available, Body: sdf - fe
+INFO 2025-11-10 16:11:15,763 views [NOTIFICATION] No tokens provided, fetching all registered device tokens
+INFO 2025-11-10 16:11:16,129 views [NOTIFICATION] Found 1 device tokens
+INFO 2025-11-10 16:11:16,131 views [NOTIFICATION] 1 valid tokens after filtering
+INFO 2025-11-10 16:11:16,132 views [NOTIFICATION] Sending notifications to Expo's push service
+INFO 2025-11-10 16:11:16,134 views [NOTIFICATION] Processing chunk 1 with 1 messages
+INFO 2025-11-10 16:11:18,032 views Notification sent successfully with receipt ID: 019a6e52-5bd0-73c8-98c2-9625b8bed69d
+INFO 2025-11-10 16:11:18,046 views Notification send result: {'status': 'success', 'success_count': 1, 'error_count': 0, 'total_sent': 1, 'errors': None, 'message': 'Successfully sent 1 notifications'}
+INFO 2025-11-10 16:11:18,082 basehttp "POST /api/devotions/ HTTP/1.1" 201 199
+INFO 2025-11-10 16:11:20,416 basehttp "GET /api/devotions/today/ HTTP/1.1" 200 808
+INFO 2025-11-10 16:11:20,699 basehttp "GET /api/devotions/ HTTP/1.1" 200 808
+INFO 2025-11-10 16:11:20,775 basehttp "GET /api/devotions/ HTTP/1.1" 200 808
+INFO 2025-11-10 16:12:18,394 autoreload C:\Users\TJ Rash\Desktop\ark_of_God_server\server\settings.py changed, reloading.

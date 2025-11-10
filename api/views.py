@@ -1,3 +1,4 @@
+import logging
 from rest_framework import viewsets, status, permissions, generics
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
@@ -186,33 +187,37 @@ class DevotionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
     def perform_create(self, serializer):
-        # Save the devotion first
-        devotion = serializer.save()
-        
-        # Prepare notification data
-        title = "New Devotion Available"
-        # Use the first 50 characters of the description as a preview
-        preview = (devotion.description[:47] + '...') if len(devotion.description) > 50 else devotion.description
-        body = f"{devotion.title} - {preview}"
-        
-        data = {
-            'type': 'new_devotion',
-            'devotion_id': str(devotion.id),
-            'title': devotion.title,
-            'description': devotion.description,
-            'content_type': devotion.content_type,
-            'devotion_date': devotion.devotion_date.isoformat() if devotion.devotion_date else None,
-            'created_at': timezone.now().isoformat(),
-        }
-        
-        # Add video URL if this is a video devotion
-        if devotion.content_type == 'video' and devotion.youtube_url:
-            data['youtube_url'] = devotion.youtube_url
-        
-        # Send push notification
-        send_push_notification(title, body, data)
-        
-        return devotion
+        logger = logging.getLogger('api.views')
+        try:
+            # Save the devotion
+            devotion = serializer.save()
+            
+            # Prepare and send notification
+            title = "New Devotion Available"
+            preview = (devotion.description[:47] + '...') if len(devotion.description) > 50 else devotion.description
+            body = f"{devotion.title} - {preview}"
+            
+            data = {
+                'type': 'new_devotion',
+                'devotion_id': str(devotion.id),
+                'title': devotion.title,
+                'description': devotion.description,
+                'content_type': devotion.content_type,
+                'devotion_date': devotion.devotion_date.isoformat() if devotion.devotion_date else None,
+                'created_at': timezone.now().isoformat(),
+            }
+            
+            if devotion.content_type == 'video' and devotion.youtube_url:
+                data['youtube_url'] = devotion.youtube_url
+            
+            # Send push notification
+            send_push_notification(title, body, data)
+            
+            return devotion
+            
+        except Exception as e:
+            logger.exception("Error creating devotion or sending notification")
+            raise
 
     def get_queryset(self):
         qs = super().get_queryset()

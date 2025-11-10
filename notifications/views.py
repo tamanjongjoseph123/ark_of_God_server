@@ -76,40 +76,26 @@ def send_push_notification(title, body, data=None, tokens=None, sound='default')
     Returns:
         dict: Status of the operation with details
     """
-    logger.info(f"[NOTIFICATION] Starting to send notification. Title: {title}, Body: {body}")
-    
     if not tokens:
-        logger.info("[NOTIFICATION] No tokens provided, fetching all registered device tokens")
         # Get all active device tokens if none provided
         tokens = list(DeviceToken.objects.values_list('token', flat=True))
     
-    logger.info(f"[NOTIFICATION] Found {len(tokens)} device tokens")
-    
     if not tokens:
-        error_msg = 'No device tokens available'
-        logger.error(f"[NOTIFICATION] {error_msg}")
-        return {'status': 'error', 'message': error_msg}
+        return {'status': 'error', 'message': 'No device tokens available'}
     
     # Filter out any empty or None tokens
     valid_tokens = [token for token in tokens if token]
-    logger.info(f"[NOTIFICATION] {len(valid_tokens)} valid tokens after filtering")
-    
     if not valid_tokens:
-        error_msg = 'No valid device tokens available after filtering'
-        logger.error(f"[NOTIFICATION] {error_msg}")
-        return {'status': 'error', 'message': error_msg}
+        return {'status': 'error', 'message': 'No valid device tokens available'}
     
     # Prepare the notification data
-    messages = []
-    for token in valid_tokens:
-        message = {
-            'to': token,
-            'title': title,
-            'body': body,
-            'sound': sound,
-            'data': data or {}
-        }
-        messages.append(message)
+    messages = [{
+        'to': token,
+        'title': title,
+        'body': body,
+        'sound': sound,
+        'data': data or {}
+    } for token in valid_tokens]
     
     # Send the notifications
     headers = {
@@ -118,58 +104,60 @@ def send_push_notification(title, body, data=None, tokens=None, sound='default')
         'Content-Type': 'application/json',
     }
     
+    success_count = 0
+    errors = []
+    
     try:
-        logger.info("[NOTIFICATION] Sending notifications to Expo's push service")
         # Send the notifications in chunks of 100 (Expo's limit)
         chunk_size = 100
-        success_count = 0
-        errors = []
         
         for i in range(0, len(messages), chunk_size):
             chunk = messages[i:i + chunk_size]
-            chunk_num = (i // chunk_size) + 1
-            logger.info(f"[NOTIFICATION] Processing chunk {chunk_num} with {len(chunk)} messages")
             
             try:
-                response = requests.post(
-                    EXPO_API_URL,
-                    headers=headers,
-                    json=chunk
-                )
-                
+                response = requests.post(EXPO_API_URL, headers=headers, json=chunk)
                 response_data = response.json()
                 
-                # Check for errors in the response
-                if response.status_code == 200 and isinstance(response_data, list):
-                    for result in response_data:
-                        if result.get('status') == 'error':
-                            errors.append({
-                                'token': result.get('details', {}).get('token'),
-                                'message': result.get('message', 'Unknown error'),
-                                'details': result.get('details')
-                            })
-                        else:
-                            success_count += 1
+                if response.status_code == 200:
+                    if isinstance(response_data, list):
+                        for result in response_data:
+                            if result.get('status') == 'error':
+                                errors.append({
+                                    'token': result.get('details', {}).get('token'),
+                                    'message': result.get('message', 'Unknown error'),
+                                    'details': result.get('details')
+                                })
+                            elif result.get('status') == 'ok':
+                                success_count += 1
+                    elif isinstance(response_data, dict) and 'data' in response_data and isinstance(response_data['data'], list):
+                        for result in response_data['data']:
+                            if result.get('status') == 'error':
+                                errors.append({
+                                    'token': result.get('details', {}).get('token'),
+                                    'message': result.get('message', 'Unknown error'),
+                                    'details': result.get('details')
+                                })
+                            elif result.get('status') == 'ok':
+                                success_count += 1
                 else:
                     errors.append({
-                        'message': f'Unexpected response: {response.status_code}',
-                        'details': response.text
+                        'message': f'Unexpected status code: {response.status_code}',
+                        'details': response.text,
+                        'status_code': response.status_code
                     })
                     
             except Exception as e:
-                logger.exception(f'Error sending push notification chunk {i//chunk_size + 1}')
-                errors.append({
-                    'message': str(e),
-                    'chunk': i // chunk_size + 1
-                })
+                logger.exception('Error sending push notification chunk')
+                errors.append({'message': str(e)})
         
         # Prepare the response
         result = {
-            'status': 'success' if not errors or success_count > 0 else 'error',
+            'status': 'success' if not errors else 'partial',
             'success_count': success_count,
             'error_count': len(errors),
             'total_sent': success_count + len(errors),
-            'errors': errors if errors else None
+            'errors': errors if errors else None,
+            'message': f'Sent {success_count} notifications' + (f' with {len(errors)} errors' if errors else '')
         }
         
         if errors:
