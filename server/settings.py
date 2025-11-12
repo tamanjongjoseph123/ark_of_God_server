@@ -93,17 +93,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'server.wsgi.application'
 
-#Database
-DATABASES = {
-    "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
-}
-
+# #Database
 # DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': BASE_DIR / 'db.sqlite3',
-#         }
-#     }
+#     "default": dj_database_url.parse(os.environ.get("DATABASE_URL"))
+# }
+
+DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password Validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -184,3 +184,17 @@ FTP_STORAGE_OPTIONS = {
 # Media (uploads)
 MEDIA_URL = "https://st60307.ispot.cc/nostress/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Expo Push Notifications Configuration
+EXPO_ACCESS_TOKEN = os.environ.get('EXPO_ACCESS_TOKEN', '')
+
+# FCM Configuration for Android push notifications
+FCM_SERVER_KEY = os.environ.get('FCM_SERVER_KEY', '')
+
+# Expo Push API Configuration
+EXPO_NOTIFICATION_CONFIG = {
+    'FCM_API_KEY': FCM_SERVER_KEY,
+    'DEFAULT_CHANNEL_ID': 'default',
+    'DEFAULT_SOUND': 'default',
+    'DEFAULT_BADGE': 1,
+}

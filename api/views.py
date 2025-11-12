@@ -172,14 +172,53 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        video_id = self.request.query_params.get('video')
+        video_id = self.request.query_params.get('video_id')
+        include_replies = self.request.query_params.get('include_replies', '').lower() == 'true'
+        
+        qs = self.queryset
         if video_id:
             qs = qs.filter(video_id=video_id)
+        
         return qs
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        if self.action == 'retrieve' or 'include_replies' in self.request.query_params:
+            context['include'] = ['replies']
+        return context
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def reply(self, request, pk=None):
+        """Create a reply to a comment"""
+        parent_comment = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Create the reply
+        reply = serializer.save(
+            user=request.user,
+            video=parent_comment.video,
+            parent=parent_comment
+        )
+        
+        # Get the updated parent comment with replies
+        parent_comment.refresh_from_db()
+        return Response(
+            self.get_serializer(parent_comment).data,
+            status=status.HTTP_201_CREATED
+        )
+    
+    @action(detail=True, methods=['get'])
+    def replies(self, request, pk=None):
+        """Get all replies for a comment"""
+        comment = self.get_object()
+        replies = comment.replies.all().order_by('created_at')
+        serializer = self.get_serializer(replies, many=True)
+        return Response(serializer.data)
 
 class DevotionViewSet(viewsets.ModelViewSet):
     queryset = Devotion.objects.all().order_by('-devotion_date', '-created_at')

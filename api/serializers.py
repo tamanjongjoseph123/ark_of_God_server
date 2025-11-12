@@ -119,16 +119,47 @@ class CourseVideoSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     replies = serializers.SerializerMethodField()
+    user_has_replied = serializers.SerializerMethodField()
+    reply_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Comment
-        fields = ['id', 'video', 'user', 'parent', 'text', 'created_at', 'replies']
-        read_only_fields = ['user', 'created_at']
+        fields = [
+            'id', 'video', 'user', 'parent', 'text', 'created_at', 
+            'replies', 'reply_count', 'user_has_replied'
+        ]
+        read_only_fields = ['user', 'created_at', 'replies', 'reply_count', 'user_has_replied']
     
     def get_replies(self, obj):
-        if obj.replies.exists():
-            return CommentSerializer(obj.replies.all(), many=True).data
+        # Only return replies if explicitly requested to avoid n+1 queries
+        if 'replies' in self.context.get('include', []):
+            return CommentSerializer(
+                obj.replies.all().order_by('created_at'), 
+                many=True,
+                context={'include': []}  # Don't include nested replies
+            ).data
         return []
+    
+    def get_reply_count(self, obj):
+        return obj.replies.count()
+    
+    def get_user_has_replied(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.replies.filter(user=request.user).exists()
+        return False
+    
+    def validate(self, data):
+        # For replies, ensure the parent comment exists and belongs to the same video
+        parent = data.get('parent')
+        video = data.get('video')
+        
+        if parent and video and parent.video_id != video.id:
+            raise serializers.ValidationError({
+                'parent': 'Parent comment must belong to the same video.'
+            })
+            
+        return data
 
 class DevotionSerializer(serializers.ModelSerializer):
     thumbnail_url = serializers.SerializerMethodField()
