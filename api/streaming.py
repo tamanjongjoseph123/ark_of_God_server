@@ -1,64 +1,57 @@
-from rest_framework import status, viewsets, permissions
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
+
 from .models import Stream
 from .serializers import StreamSerializer
 
+
 class StreamViewSet(viewsets.ModelViewSet):
-    queryset = Stream.objects.all()
     serializer_class = StreamSerializer
-    
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.action == 'active':
-            permission_classes = [permissions.AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    http_method_names = ['get', 'put', 'patch', 'delete', 'head', 'options']  # Allow DELETE method
 
     def get_queryset(self):
-        # Only show active streams to non-admin users and unauthenticated users
-        if not self.request.user.is_authenticated or not self.request.user.is_staff:
-            return Stream.objects.filter(is_active=True)
-        return Stream.objects.all()
+        # Only ever return the single stream
+        return Stream.objects.all()[:1]
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
-    def start(self, request, pk=None):
-        stream = self.get_object()
-        if stream.is_active:
-            return Response(
-                {'status': 'Stream is already active'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        stream.start_time = timezone.now()
-        stream.is_active = True
-        stream.save()
-        
-        return Response({'status': 'Stream started'})
+    def get_object(self):
+        # Always return the single stream, creating it if it doesn't exist
+        return Stream.get_stream()
 
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
-    def end(self, request, pk=None):
+    def list(self, request, *args, **kwargs):
+        # Redirect list view to retrieve the single stream
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        # Don't allow creating new streams, only updating the existing one
+        return Response(
+            {'detail': 'Method not allowed. Use PUT or PATCH to update the existing stream.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get the current stream"""
         stream = self.get_object()
-        if not stream.is_active:
-            return Response(
-                {'status': 'Stream is not active'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        stream.end_time = timezone.now()
-        stream.is_active = False
-        stream.save()
-        
-        return Response({'status': 'Stream ended'})
+        serializer = self.get_serializer(stream)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'], permission_classes=[permissions.AllowAny])
-    def active(self, request):
-        active_stream = Stream.objects.filter(is_active=True).first()
-        if active_stream:
-            serializer = self.get_serializer(active_stream)
-            return Response(serializer.data)
-        return Response({'status': 'No active stream'}, status=status.HTTP_404_NOT_FOUND)
+    def current(self, request):
+        """Public endpoint to get the current stream (no auth required)"""
+        stream = self.get_object()
+        serializer = self.get_serializer(stream)
+        return Response(serializer.data)
+        
+    def destroy(self, request, *args, **kwargs):
+        """
+        Delete the stream.
+        A new empty stream will be automatically created when needed.
+        """
+        instance = self.get_object()
+        instance.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

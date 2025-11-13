@@ -42,7 +42,11 @@ The Course Applications API allows users to apply for **Sons of John Chi** or **
    OR
    Admin rejects → status = "rejected"
    ↓
-6. User continues to access app with full privileges (if approved)
+6. If rejected, user can reapply with updated information
+   OR
+   Admin can re-open the application for updates
+   ↓
+7. User continues to access app with full privileges (if approved)
 ```
 
 ---
@@ -51,8 +55,9 @@ The Course Applications API allows users to apply for **Sons of John Chi** or **
 
 ### For Applicants
 
-Users can log in immediately after submitting their application, even while it's pending:
+Users can log in immediately after submitting their application, but access to certain features may be restricted based on their application status.
 
+#### Successful Login (200 OK)
 ```bash
 curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -62,7 +67,7 @@ curl -X POST http://localhost:8000/api/auth/login \
   }'
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
@@ -76,6 +81,40 @@ curl -X POST http://localhost:8000/api/auth/login \
   }
 }
 ```
+
+#### Error Responses
+
+1. **Invalid Credentials (401 Unauthorized)**
+   - When username or password is incorrect
+   ```json
+   {
+     "error": "Invalid username or password. Please try again."
+   }
+   ```
+
+2. **Pending Application (403 Forbidden)**
+   - When the application is still under review
+   ```json
+   {
+     "error": "Your application is still under review. Please wait for approval."
+   }
+   ```
+
+3. **Rejected Application (403 Forbidden)**
+   - When the application has been rejected
+   ```json
+   {
+     "error": "Your application has been rejected. Please contact support for more information."
+   }
+   ```
+
+4. **Account Setup Error (500 Internal Server Error)**
+   - When there's an issue with the user account setup
+   ```json
+   {
+     "error": "Your account is not properly set up. Please contact support."
+   }
+   ```
 
 ### For Admins
 
@@ -126,9 +165,28 @@ export TOKEN="your_admin_token_here"
 ### Status Options
 - **`pending`**: Application submitted, awaiting review
 - **`approved`**: Application approved, user account created
-- **`rejected`**: Application rejected
+- **`rejected`**: Application rejected (user can reapply or admin can re-open)
 
 ---
+
+## Reapplication Process
+
+### For Users:
+1. If your application is rejected, you can submit a new application with updated information
+2. The system will prevent duplicate pending or approved applications for the same course type
+3. You can update your information and resubmit for consideration
+
+### For Admins:
+1. **Re-approving a Rejected Application**:
+   - Navigate to the rejected application in the admin panel
+   - Click "Approve" to approve the application
+   - The system will update the user account if it exists, or create a new one
+
+2. **Reopening for Reapplication**:
+   - Select one or more rejected applications
+   - Choose "Reopen selected rejected applications for reapplication" from the action dropdown
+   - This creates a new pending application with the same details
+   - The user can then update their information if needed
 
 ## API Endpoints
 
@@ -273,44 +331,42 @@ curl http://localhost:8000/api/applications/1/ \
   -H "Authorization: Bearer $TOKEN"
 ```
 
-### 6. Approve Application (Admin Only)
+### 6. Approve/Re-approve Application (Admin Only)
 
 - **URL**: `/api/applications/{id}/approve/`
 - **Method**: `POST`
 - **Permission**: IsAdminUser
+- **Description**: 
+  - Approve a pending application (creates user account)
+  - Re-approve a previously rejected application (updates existing user account)
 
-**cURL Example:**
+**cURL Example (Approve):**
 ```bash
 curl -X POST http://localhost:8000/api/applications/1/approve/ \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
 ```
 
-**Response:**
+**cURL Example (Re-approve):**
+```bash
+# Works the same as approve, but updates existing user if application was previously rejected
+curl -X POST http://localhost:8000/api/applications/2/approve/ \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
+```
+
+**Response (200 OK):**
 ```json
 {
   "detail": "Application approved successfully",
   "application": {
     "id": 1,
-    "application_type": "mentorship",
     "status": "approved",
-    "full_name": "Jane Smith",
-    "email": "jane.smith@example.com",
-    "phone_number": "+9876543210",
-    "your_interest": "I want to be mentored in ministry and leadership",
-    "your_goals": "To develop my gifts and serve effectively in ministry",
-    "username": "jane_smith",
-    "user": 5,
     "user_details": {
-      "id": 5,
+      "id": 3,
       "username": "jane_smith",
-      "email": "jane.smith@example.com",
-      "country": "",
-      "contact": "+9876543210"
-    },
-    "created_at": "2025-11-07T12:00:00Z",
-    "updated_at": "2025-11-07T12:30:00Z",
-    "reviewed_at": "2025-11-07T12:30:00Z",
-    "reviewed_by": 1
+      "email": "jane.smith@example.com"
+    }
   }
 }
 ```
@@ -320,27 +376,24 @@ curl -X POST http://localhost:8000/api/applications/1/approve/ \
 - **URL**: `/api/applications/{id}/reject/`
 - **Method**: `POST`
 - **Permission**: IsAdminUser
+- **Description**: Reject an application. The user can reapply after rejection.
 
 **cURL Example:**
 ```bash
 curl -X POST http://localhost:8000/api/applications/1/reject/ \
-  -H "Authorization: Bearer $TOKEN"
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
 ```
 
-**Response:**
+**Response (200 OK):**
 ```json
 {
   "detail": "Application rejected",
   "application": {
     "id": 1,
-    "application_type": "mentorship",
     "status": "rejected",
-    "full_name": "Jane Smith",
-    "email": "jane.smith@example.com",
-    "phone_number": "+9876543210",
-    "your_interest": "I want to be mentored in ministry and leadership",
-    "your_goals": "To develop my gifts and serve effectively in ministry",
-    "username": "jane_smith",
+    "reviewed_by": 1,
+    "reviewed_at": "2025-11-07T14:30:00Z"
     "user": null,
     "user_details": null,
     "created_at": "2025-11-07T12:00:00Z",
@@ -517,6 +570,25 @@ curl http://localhost:8000/api/applications/?status=rejected \
 ```
 
 ---
+
+## Common Scenarios
+
+### Reapplying After Rejection
+
+If your application was rejected, you can submit a new application with updated information:
+
+1. Go to the application form again
+2. Fill in your details (you can update any information)
+3. Submit the application
+
+**Note**: You cannot have multiple pending applications for the same course type.
+
+### Admin: Handling Reapplications
+
+As an admin, you have two options when a previously rejected user reapplies:
+
+1. **Approve the new application directly** if it meets the requirements
+2. **Request more information** by rejecting with a note about what's missing
 
 ## Error Handling
 

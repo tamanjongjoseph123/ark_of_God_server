@@ -23,7 +23,8 @@ router.register(r'course-videos', CourseVideoViewSet)
 router.register(r'comments', CommentViewSet)
 router.register(r'devotions', DevotionViewSet)
 router.register(r'applications', CourseApplicationViewSet)
-router.register(r'streams', StreamViewSet, basename='stream')
+router.register(r'stream', StreamViewSet, basename='stream')
+
 # Single prayer room endpoints
 prayer_room_router = DefaultRouter()
 prayer_room_router.register(r'', PrayerRoomViewSet, basename='prayer-room')
@@ -34,8 +35,8 @@ urlpatterns = [
     re_path(r'^auth/login/$', LoginView.as_view(), name='admin-login'),
     re_path(r'^token/refresh/$', TokenRefreshView.as_view(), name='token_refresh'),
     
-    # Streams
-    path('streams/active/', StreamViewSet.as_view({'get': 'active'}), name='active-stream'),
+    # Public stream endpoint (no auth required)
+    path('stream/current/', StreamViewSet.as_view({'get': 'current'}), name='stream-current'),
     
     # Prayer room endpoints
     path('prayer-room/', include(prayer_room_router.urls)),

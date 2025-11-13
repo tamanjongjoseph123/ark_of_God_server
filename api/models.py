@@ -54,32 +54,53 @@ class InspirationQuote(models.Model):
 
 
 class Stream(models.Model):
-    STREAM_TYPE_CHOICES = [
-        ('live', 'YouTube Live'),
-        ('regular', 'YouTube Video'),
-    ]
-    
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    stream_type = models.CharField(max_length=10, choices=STREAM_TYPE_CHOICES, default='live')
-    youtube_url = models.URLField(
+    """
+    Model for managing live streams.
+    Admins can add YouTube live stream URLs which will be displayed in the app.
+    """
+    title = models.CharField(max_length=255, default='Live Stream', help_text="Title of the live stream")
+    description = models.TextField(blank=True, null=True, help_text="Optional description")
+    stream_url = models.URLField(
+        help_text="URL of the live stream (YouTube, Facebook, etc.)",
         validators=[URLValidator()],
-        help_text="URL of the YouTube video or live stream"
+        default='https://www.youtube.com/'
     )
-    is_active = models.BooleanField(default=False)
-    start_time = models.DateTimeField(null=True, blank=True)
-    end_time = models.DateTimeField(null=True, blank=True)
+    thumbnail_url = models.URLField(blank=True, null=True, help_text="Optional thumbnail image URL for the stream")
+    scheduled_time = models.DateTimeField(null=True, blank=True, help_text="Scheduled start time (optional)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        verbose_name_plural = "Stream"  # Remove 's' from admin panel
+
+    def save(self, *args, **kwargs):
+        # Only allow one instance
+        if not self.pk and Stream.objects.exists():
+            # If this is a new stream but one already exists, update it instead
+            existing = Stream.objects.first()
+            existing.title = self.title
+            existing.description = self.description
+            existing.stream_url = self.stream_url
+            existing.thumbnail_url = self.thumbnail_url
+            existing.scheduled_time = self.scheduled_time
+            existing.save()
+            return
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_stream(cls):
+        """Get the single stream instance, create it if it doesn't exist"""
+        stream, created = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                'title': 'Live Stream',
+                'stream_url': 'https://www.youtube.com/'
+            }
+        )
+        return stream
+
     def __str__(self):
-        status = 'Active' if self.is_active else 'Inactive'
-        return f"{self.title} - {status} ({self.get_stream_type_display()})"
-        
-    def clean(self):
-        if not self.youtube_url:
-            raise ValidationError('YouTube URL is required')
-        # You might want to add additional validation for YouTube URL format
+        return self.title or 'Live Stream'
 
 class PrayerRequest(models.Model):
     name = models.CharField(max_length=255)
@@ -117,7 +138,19 @@ class UpcomingEvent(models.Model):
     
     title = models.CharField(max_length=255)
     description = models.TextField()
-    image = models.ImageField(upload_to='events/', max_length=500)
+    image = models.ImageField(
+        upload_to='events/',
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='Event poster/image (required for upcoming events)'
+    )
+    youtube_url = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        help_text='YouTube URL for past event recording (only used when event_status is "past")'
+    )
     event_date = models.DateTimeField()
     event_status = models.CharField(max_length=10, choices=EVENT_STATUS_CHOICES, default='upcoming')
     location = models.CharField(max_length=255, blank=True, null=True)
@@ -126,8 +159,23 @@ class UpcomingEvent(models.Model):
     class Meta:
         ordering = ['-event_date']
 
+    def clean(self):
+        if self.event_status == 'upcoming' and not self.image:
+            raise ValidationError({'image': 'Image is required for upcoming events'})
+        if self.event_status == 'past' and not self.youtube_url:
+            raise ValidationError({'youtube_url': 'YouTube URL is required for past events'})
+
     def __str__(self):
-        return f"{self.title} - {self.get_event_status_display()}" 
+        return f"{self.title} - {self.get_event_status_display()}"
+
+    fieldsets = (
+        ('Event Information', {
+            'fields': ('title', 'description', 'event_status', 'location')
+        }),
+        ('Media & Date', {
+            'fields': ('image', 'youtube_url', 'event_date')
+        }),
+    )
 
 class PrayerRoom(models.Model):
     """Singleton model to represent the prayer room with YouTube streaming."""

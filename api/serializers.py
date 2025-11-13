@@ -46,9 +46,38 @@ class InspirationQuoteSerializer(serializers.ModelSerializer):
 class StreamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stream
-        fields = ['id', 'title', 'description', 'stream_type', 'youtube_url', 'is_active', 
-                 'start_time', 'end_time', 'created_at', 'updated_at']
-
+        fields = [
+            'id', 'title', 'description', 'stream_url',
+            'thumbnail_url', 'scheduled_time', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def validate_stream_url(self, value):
+        """
+        Validate that the stream URL is from a supported platform.
+        """
+        supported_domains = [
+            'youtube.com', 'youtu.be',  # YouTube
+            'facebook.com', 'fb.watch',  # Facebook
+            'vimeo.com',                # Vimeo
+            'twitch.tv'                 # Twitch
+        ]
+        
+        if not any(domain in value for domain in supported_domains):
+            raise serializers.ValidationError(
+                "Please provide a valid streaming URL from a supported platform. "
+                "Supported platforms: YouTube, Facebook, Vimeo, Twitch."
+            )
+            
+        # Additional validation for YouTube URLs
+        if 'youtube.com' in value or 'youtu.be' in value:
+            if 'youtube.com/watch?v=' not in value and 'youtu.be/' not in value:
+                if 'youtube.com/live/' not in value:  # Allow YouTube live URLs
+                    raise serializers.ValidationError(
+                        "Please provide a valid YouTube video or live stream URL."
+                    )
+                    
+        return value
 
 class PrayerRoomSerializer(serializers.ModelSerializer):
     """Serializer for the PrayerRoom model with YouTube streaming."""
@@ -218,14 +247,25 @@ class CourseApplicationSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, data):
-        """Check if user already applied for this specific application type"""
+        """Check if user already has a pending or approved application for this type"""
         email = data.get('email')
         application_type = data.get('application_type')
         
-        # Check if email already applied for this specific application type
-        if CourseApplication.objects.filter(email=email, application_type=application_type).exists():
-            raise serializers.ValidationError({
-                'email': f'An application for {application_type} with this email already exists. You can apply for the other course type.'
-            })
+        # Check if there's an existing pending or approved application for this email and type
+        existing_app = CourseApplication.objects.filter(
+            email=email, 
+            application_type=application_type,
+            status__in=['pending', 'approved']
+        ).first()
+        
+        if existing_app:
+            if existing_app.status == 'pending':
+                raise serializers.ValidationError({
+                    'email': f'You already have a pending application for {application_type}.'
+                })
+            elif existing_app.status == 'approved':
+                raise serializers.ValidationError({
+                    'email': f'Your application for {application_type} has already been approved.'
+                })
         
         return data

@@ -4,7 +4,7 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import make_password, check_password
 from rest_framework_simplejwt.tokens import RefreshToken
 from notifications.views import send_push_notification
 from django.utils import timezone
@@ -29,9 +29,12 @@ class LoginView(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         username = request.data.get('username')
         password = request.data.get('password')
+        
+        # First try to authenticate the user
         user = authenticate(username=username, password=password)
         
-        if user is not None and user.is_staff:  # Only allow admin users
+        # Check if this is a staff/admin user
+        if user is not None and user.is_staff:
             refresh = RefreshToken.for_user(user)
             return Response({
                 'refresh': str(refresh),
@@ -39,7 +42,64 @@ class LoginView(generics.GenericAPIView):
                 'user': UserSerializer(user).data,
                 'is_admin': True
             })
-        return Response({'error': 'Invalid credentials or not an admin user'}, status=400)
+        
+        # Check if this is a course application user
+        try:
+            application = CourseApplication.objects.get(username=username)
+            
+            # First check if the application is approved and user exists
+            if application.status == 'approved' and application.user:
+                if user is not None:  # If authentication was successful
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                        'user': UserSerializer(user).data,
+                        'is_admin': False
+                    })
+                else:
+                    # If authentication failed but application is approved
+                    return Response(
+                        {'error': 'Invalid username or password. Please try again.'}, 
+                        status=status.HTTP_401_UNAUTHORIZED
+                    )
+            
+            # Check if the password matches the one in the application
+            if not application.password or not check_password(password, application.password):
+                return Response(
+                    {'error': 'Invalid username or password. Please try again.'},
+                    status=status.HTTP_401_UNAUTHORIZED
+                )
+            
+            # If we get here, the password is correct but the application is not approved
+            if application.status == 'pending':
+                return Response(
+                    {'error': 'Your application is still under review. Please wait for approval.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            elif application.status == 'rejected':
+                return Response(
+                    {'error': 'Your application has been rejected. Please contact support for more information.'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # This should not normally be reached
+            return Response(
+                {'error': 'There was an issue with your account. Please contact support.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+        except CourseApplication.DoesNotExist:
+            # No application found with this username
+            pass
+        
+        # If we get here, either:
+        # 1. No application found with this username, or
+        # 2. Password didn't match
+        return Response(
+            {'error': 'Invalid username or password. Please try again.'}, 
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -317,29 +377,38 @@ class CourseApplicationViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
     def approve(self, request, pk=None):
-        """Approve an application and create user account"""
+        """Approve an application and create/update user account"""
         application = self.get_object()
         
-        if application.status != 'pending':
+        if application.status == 'approved':
             return Response(
-                {'detail': f'Application is already {application.status}'},
+                {'detail': 'Application is already approved'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Create user account
         try:
-            # Create the user with the password from the application
-            # Since the password is already hashed, we need to create the user manually
-            user = User(
-                username=application.username,
-                email=application.email,
-                country=application.country if hasattr(application, 'country') else '',
-                contact=application.phone_number,
-                name=application.full_name
-            )
-            # Set the password directly (it's already hashed)
-            user.password = application.password
-            user.save()
+            user = None
+            # If application was previously rejected, check if user exists
+            if application.status == 'rejected' and application.user:
+                user = application.user
+                # Update user details from application
+                user.email = application.email
+                user.contact = application.phone_number
+                user.name = application.full_name
+                user.save()
+            
+            # If no user exists, create a new one
+            if not user:
+                user = User(
+                    username=application.username,
+                    email=application.email,
+                    country=application.country if hasattr(application, 'country') else '',
+                    contact=application.phone_number,
+                    name=application.full_name
+                )
+                # Set the password directly (it's already hashed)
+                user.password = application.password
+                user.save()
             
             # Update application
             application.status = 'approved'
@@ -356,7 +425,7 @@ class CourseApplicationViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response(
-                {'detail': f'Error creating user: {str(e)}'},
+                {'detail': f'Error processing approval: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
@@ -365,9 +434,9 @@ class CourseApplicationViewSet(viewsets.ModelViewSet):
         """Reject an application"""
         application = self.get_object()
         
-        if application.status != 'pending':
+        if application.status == 'rejected':
             return Response(
-                {'detail': f'Application is already {application.status}'},
+                {'detail': 'Application is already rejected'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
@@ -376,6 +445,9 @@ class CourseApplicationViewSet(viewsets.ModelViewSet):
         from django.utils import timezone
         application.reviewed_at = timezone.now()
         application.save()
+        
+        # If there was a user created, we don't delete it but keep it for reference
+        # The user can be reactivated if the application is approved again
         
         serializer = self.get_serializer(application)
         return Response({

@@ -68,7 +68,8 @@ export TOKEN="your_access_token_here"
 | `id` | Integer | Auto | Unique identifier |
 | `title` | String | Yes | Event title/name |
 | `description` | Text | Yes | Detailed event description |
-| `image` | ImageField | Yes | Event poster/image |
+| `image` | ImageField | No | Event poster/image |
+| `youtube_url` | URL | No | YouTube URL for past event recording (only used when event_status is "past") |
 | `event_date` | DateTime | Yes | Date and time of the event |
 | `event_status` | String | Yes | Either `upcoming` or `past` (default: `upcoming`) |
 | `location` | String | Optional | Event location/venue |
@@ -77,7 +78,7 @@ export TOKEN="your_access_token_here"
 ### Event Status Options
 
 - **`upcoming`**: Events that haven't occurred yet or are currently happening
-- **`past`**: Events that have already concluded
+- **`past`**: Events that have already concluded. For past events, you can provide a YouTube URL to the recorded video.
 
 ---
 
