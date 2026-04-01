@@ -11,15 +11,15 @@ from django.utils import timezone
 
 from .models import (
     User, ChurchProject, Video, InspirationQuote, 
-    PrayerRequest, Testimony, UpcomingEvent,
-    Course, Module, CourseVideo, Comment, Devotion, CourseApplication, Stream, PrayerRoom
+    PrayerRequest, Testimony, UpcomingEvent, Course, Module, CourseVideo, Comment, Devotion,
+    CourseApplication, Stream, PrayerRoom, VideoTranslation
 )
 from .serializers import (
     UserSerializer, ChurchProjectSerializer, VideoSerializer, 
     InspirationQuoteSerializer, PrayerRequestSerializer, TestimonySerializer,
     UpcomingEventSerializer, CourseSerializer, ModuleSerializer, 
     CourseVideoSerializer, CommentSerializer, DevotionSerializer, 
-    CourseApplicationSerializer, StreamSerializer, PrayerRoomSerializer, UserLoginSerializer
+    CourseApplicationSerializer, StreamSerializer, PrayerRoomSerializer, UserLoginSerializer, VideoTranslationSerializer
 )
 
 class LoginView(generics.GenericAPIView):
@@ -545,3 +545,48 @@ class CourseApplicationViewSet(viewsets.ModelViewSet):
             'user': UserSerializer(user).data,
             'application_type': application.application_type
         })
+
+class VideoTranslationViewSet(viewsets.ModelViewSet):
+    """ViewSet for VideoTranslation model"""
+    queryset = VideoTranslation.objects.all().order_by('language_display')
+    serializer_class = VideoTranslationSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    
+    def get_queryset(self):
+        qs = super().get_queryset()
+        
+        # Filter by video type
+        video_type = self.request.query_params.get('video_type')
+        if video_type:
+            qs = qs.filter(video_type=video_type)
+        
+        # Filter by video ID
+        video_id = self.request.query_params.get('video_id')
+        if video_id:
+            qs = qs.filter(video_id=video_id)
+        
+        # Filter by language
+        language = self.request.query_params.get('language')
+        if language:
+            qs = qs.filter(language=language)
+        
+        return qs
+    
+    @action(detail=False, methods=['get'])
+    def by_video(self, request):
+        """Get translations for a specific video"""
+        video_type = request.query_params.get('video_type')
+        video_id = request.query_params.get('video_id')
+        
+        if not video_type or not video_id:
+            return Response(
+                {'error': 'Both video_type and video_id parameters are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        translations = self.queryset.filter(
+            video_type=video_type,
+            video_id=video_id
+        )
+        serializer = self.get_serializer(translations, many=True)
+        return Response(serializer.data)

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import (
     User, ChurchProject, Video, InspirationQuote, 
     PrayerRequest, Testimony, UpcomingEvent, Course, Module, CourseVideo, Comment, Devotion,
-    CourseApplication, Stream, PrayerRoom
+    CourseApplication, Stream, PrayerRoom, VideoTranslation
 )
 from django.contrib.auth.hashers import make_password
 
@@ -34,9 +34,16 @@ class ChurchProjectSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class VideoSerializer(serializers.ModelSerializer):
+    translations = serializers.SerializerMethodField()
+    
     class Meta:
         model = Video
         fields = '__all__'
+    
+    def get_translations(self, obj):
+        """Get all translations for this video"""
+        translations = obj.get_translations()
+        return VideoTranslationSerializer(translations, many=True).data
 
 class InspirationQuoteSerializer(serializers.ModelSerializer):
     class Meta:
@@ -141,9 +148,16 @@ class ModuleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CourseVideoSerializer(serializers.ModelSerializer):
+    translations = serializers.SerializerMethodField()
+    
     class Meta:
         model = CourseVideo
         fields = '__all__'
+    
+    def get_translations(self, obj):
+        """Get all translations for this course video"""
+        translations = obj.get_translations()
+        return VideoTranslationSerializer(translations, many=True).data
 
 class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
@@ -267,5 +281,37 @@ class CourseApplicationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     'email': f'Your application for {application_type} has already been approved.'
                 })
+        
+        return data
+
+class VideoTranslationSerializer(serializers.ModelSerializer):
+    """Serializer for VideoTranslation model"""
+    class Meta:
+        model = VideoTranslation
+        fields = [
+            'id', 'video_type', 'video_id', 'language', 'language_display',
+            'translated_video_url', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def validate(self, data):
+        """Validate that the referenced video exists"""
+        video_type = data.get('video_type')
+        video_id = data.get('video_id')
+        
+        if video_type == 'video':
+            if not Video.objects.filter(id=video_id).exists():
+                raise serializers.ValidationError({
+                    'video_id': f'Video with ID {video_id} does not exist'
+                })
+        elif video_type == 'coursevideo':
+            from django.apps import apps
+            CourseVideo = apps.get_model('api', 'CourseVideo')
+            if not CourseVideo.objects.filter(id=video_id).exists():
+                raise serializers.ValidationError({
+                    'video_id': f'CourseVideo with ID {video_id} does not exist'
+                })
+        
+        # Removed hardcoded language validation
         
         return data

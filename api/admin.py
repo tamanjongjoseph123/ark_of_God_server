@@ -5,7 +5,7 @@ from django.utils.html import format_html
 from .models import (
     User, ChurchProject, Video, InspirationQuote, 
     PrayerRequest, Testimony, UpcomingEvent, 
-    Course, Module, CourseVideo, Comment, Devotion, CourseApplication, Stream, PrayerRoom
+    Course, Module, CourseVideo, Comment, Devotion, CourseApplication, Stream, PrayerRoom, VideoTranslation
 )
 
 @admin.register(User)
@@ -443,3 +443,43 @@ class PrayerRoomAdmin(admin.ModelAdmin):
         
     start_prayer_room.short_description = 'Start prayer room'
     end_prayer_room.short_description = 'End prayer room'
+
+@admin.register(VideoTranslation)
+class VideoTranslationAdmin(admin.ModelAdmin):
+    list_display = ('video_info', 'language_display', 'translated_video_url', 'created_at', 'updated_at')
+    list_filter = ('video_type', 'language', 'created_at')
+    search_fields = ('language_display', 'translated_video_url')
+    ordering = ('video_type', 'video_id', 'language_display')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def video_info(self, obj):
+        """Display video information in list view"""
+        if obj.video_type == 'video':
+            try:
+                video = Video.objects.get(id=obj.video_id)
+                return f"Video: {video.title[:30]}..."
+            except Video.DoesNotExist:
+                return f"Video ID {obj.video_id} (Not Found)"
+        elif obj.video_type == 'coursevideo':
+            try:
+                from django.apps import apps
+                CourseVideo = apps.get_model('api', 'CourseVideo')
+                video = CourseVideo.objects.get(id=obj.video_id)
+                return f"Course: {video.name[:30]}..."
+            except CourseVideo.DoesNotExist:
+                return f"CourseVideo ID {obj.video_id} (Not Found)"
+        return f"{obj.video_type} ID {obj.video_id}"
+    video_info.short_description = 'Video Info'
+    
+    fieldsets = (
+        ('Video Information', {
+            'fields': ('video_type', 'video_id')
+        }),
+        ('Translation Details', {
+            'fields': ('language', 'language_display', 'translated_video_url')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )

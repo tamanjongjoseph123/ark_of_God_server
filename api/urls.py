@@ -1,16 +1,16 @@
 from django.urls import path, include, re_path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     ChurchProjectViewSet, VideoViewSet,
     InspirationQuoteViewSet, PrayerRequestViewSet, TestimonyViewSet,
     UpcomingEventViewSet, CourseViewSet, ModuleViewSet, CourseVideoViewSet,
-    CommentViewSet, DevotionViewSet, CourseApplicationViewSet, LoginView
+    CommentViewSet, DevotionViewSet, CourseApplicationViewSet, LoginView, VideoTranslationViewSet
 )
 from .streaming import StreamViewSet
 from .prayer_room import PrayerRoomViewSet
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register(r'church-projects', ChurchProjectViewSet)
 router.register(r'videos', VideoViewSet)
 router.register(r'inspiration-quotes', InspirationQuoteViewSet)
@@ -23,10 +23,11 @@ router.register(r'course-videos', CourseVideoViewSet)
 router.register(r'comments', CommentViewSet)
 router.register(r'devotions', DevotionViewSet)
 router.register(r'applications', CourseApplicationViewSet)
+router.register(r'video-translations', VideoTranslationViewSet)
 router.register(r'stream', StreamViewSet, basename='stream')
 
 # Single prayer room endpoints
-prayer_room_router = DefaultRouter()
+prayer_room_router = SimpleRouter()
 prayer_room_router.register(r'', PrayerRoomViewSet, basename='prayer-room')
 
 # API URL patterns - these will be included under /api/
@@ -44,16 +45,3 @@ urlpatterns = [
     # Include all router URLs
     path('', include(router.urls)),
 ]
-
-# Add this for debugging - will show all available URLs
-from django.urls import get_resolver
-
-def print_urls(urls, prefix=''):
-    for url in urls:
-        if hasattr(url, 'url_patterns'):
-            print_urls(url.url_patterns, prefix + str(url.pattern))
-        else:
-            print(prefix + str(url.pattern))
-
-print("\nAvailable URLs:")
-print_urls(urlpatterns)

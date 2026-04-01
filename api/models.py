@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
 
 
 class User(AbstractUser):
@@ -10,6 +11,23 @@ class User(AbstractUser):
     contact = models.CharField(max_length=20)
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=255, unique=True)
+    
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        help_text='The groups this user belongs to.',
+        related_name="custom_user_groups",
+        related_query_name="custom_user",
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        related_name="custom_user_permissions",
+        related_query_name="custom_user",
+    )
     
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'name', 'country', 'contact']
@@ -44,6 +62,76 @@ class Video(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.category}"
+
+    def get_translations(self):
+        """Get all translations for this video"""
+        return VideoTranslation.objects.filter(
+            video_type='video',
+            video_id=self.id
+        ).order_by('language_display')
+    
+    def get_translation(self, language_code):
+        """Get a specific translation for this video by language code"""
+        try:
+            return VideoTranslation.objects.get(
+                video_type='video',
+                video_id=self.id,
+                language=language_code
+            )
+        except VideoTranslation.DoesNotExist:
+            return None
+
+class VideoTranslation(models.Model):
+    # Generic foreign key to work with both Video and CourseVideo models
+    video_type = models.CharField(
+        max_length=20,
+        choices=[('video', 'General Video'), ('coursevideo', 'Course Video')],
+        help_text="Type of video this translation belongs to"
+    )
+    video_id = models.PositiveIntegerField(help_text="ID of video this translation belongs to")
+    
+    language = models.CharField(
+        max_length=10, 
+        help_text="Language code of this translation (e.g., 'en', 'fr', 'es')"
+    )
+    language_display = models.CharField(
+        max_length=100,
+        help_text="Display name for the language (e.g., 'French', 'Spanish')"
+    )
+    translated_video_url = models.URLField(
+        validators=[URLValidator()],
+        help_text="URL of the translated video"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['video_type', 'video_id', 'language']
+        ordering = ['language_display']
+
+    def __str__(self):
+        return f"{self.language_display} translation for {self.video_type} ID {self.video_id}"
+
+    def clean(self):
+        # Validate that the referenced video exists
+        if self.video_type == 'video':
+            if not Video.objects.filter(id=self.video_id).exists():
+                raise ValidationError({'video_id': f'Video with ID {self.video_id} does not exist'})
+        elif self.video_type == 'coursevideo':
+            from django.apps import apps
+            CourseVideo = apps.get_model('api', 'CourseVideo')
+            if not CourseVideo.objects.filter(id=self.video_id).exists():
+                raise ValidationError({'video_id': f'CourseVideo with ID {self.video_id} does not exist'})
+
+    def get_video(self):
+        """Get the actual video object this translation belongs to"""
+        if self.video_type == 'video':
+            return Video.objects.get(id=self.video_id)
+        elif self.video_type == 'coursevideo':
+            from django.apps import apps
+            CourseVideo = apps.get_model('api', 'CourseVideo')
+            return CourseVideo.objects.get(id=self.video_id)
+        return None
 
 class InspirationQuote(models.Model):
     quote = models.TextField()
@@ -271,6 +359,24 @@ class CourseVideo(models.Model):
                 video_id = match.group(1)
                 return f"https://img.youtube.com/vi/{video_id}/maxresdefault.jpg"
         return None
+    
+    def get_translations(self):
+        """Get all translations for this course video"""
+        return VideoTranslation.objects.filter(
+            video_type='coursevideo',
+            video_id=self.id
+        ).order_by('language_display')
+    
+    def get_translation(self, language_code):
+        """Get a specific translation for this course video by language code"""
+        try:
+            return VideoTranslation.objects.get(
+                video_type='coursevideo',
+                video_id=self.id,
+                language=language_code
+            )
+        except VideoTranslation.DoesNotExist:
+            return None
 
 class Comment(models.Model):
     video = models.ForeignKey(CourseVideo, on_delete=models.CASCADE, related_name='comments')
