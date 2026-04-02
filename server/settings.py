@@ -40,7 +40,7 @@ ALLOWED_HOSTS = []
 if os.environ.get("ALLOWED_HOSTS"):
     ALLOWED_HOSTS.extend(os.environ.get("ALLOWED_HOSTS").split(","))
 if DEBUG:
-    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '10.51.148.169'])
+    ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '192.168.1.203'])
 
 # Applications
 INSTALLED_APPS = [
@@ -139,6 +139,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
     'FORMAT_SUFFIX_OVERRIDE': None,
     'URL_FORMAT_OVERRIDE': None,
 }

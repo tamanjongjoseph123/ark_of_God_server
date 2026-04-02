@@ -584,9 +584,53 @@ class VideoTranslationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        translations = self.queryset.filter(
-            video_type=video_type,
-            video_id=video_id
-        )
-        serializer = self.get_serializer(translations, many=True)
-        return Response(serializer.data)
+        try:
+            # Check if video_id is a numeric database ID or YouTube video ID string
+            if video_id.isdigit():
+                # Treat as database ID
+                db_video_id = int(video_id)
+            else:
+                # Treat as YouTube video ID string
+                if video_type == 'video':
+                    # Try to find video by YouTube URL containing the video_id
+                    videos = Video.objects.filter(youtube_url__icontains=video_id)
+                    if not videos.exists():
+                        return Response(
+                            {'error': f'Video with YouTube ID {video_id} not found'},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
+                    # If multiple videos found, use the first one
+                    video = videos.first()
+                    db_video_id = video.id
+                elif video_type == 'coursevideo':
+                    # Try to find course video by YouTube URL containing the video_id
+                    videos = CourseVideo.objects.filter(youtube_url__icontains=video_id)
+                    if not videos.exists():
+                        return Response(
+                            {'error': f'Course video with YouTube ID {video_id} not found'},
+                            status=status.HTTP_404_NOT_FOUND
+                        )
+                    # If multiple videos found, use the first one
+                    video = videos.first()
+                    db_video_id = video.id
+                else:
+                    return Response(
+                        {'error': 'Invalid video_type. Must be "video" or "coursevideo"'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            translations = self.queryset.filter(
+                video_type=video_type,
+                video_id=db_video_id
+            )
+            serializer = self.get_serializer(translations, many=True)
+            return Response(serializer.data)
+            
+        except ValueError:
+            # If video_id is already a valid integer, use it directly
+            translations = self.queryset.filter(
+                video_type=video_type,
+                video_id=video_id
+            )
+            serializer = self.get_serializer(translations, many=True)
+            return Response(serializer.data)
