@@ -456,13 +456,13 @@ class CourseApplication(models.Model):
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='application')
     
     # Timestamps
-    created_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     reviewed_at = models.DateTimeField(null=True, blank=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_applications')
     
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-submitted_at']
         # Allow same email for different application types, but not for the same type
         unique_together = [['email', 'application_type']]
     

@@ -154,11 +154,11 @@ class DevotionAdmin(admin.ModelAdmin):
 
 @admin.register(CourseApplication)
 class CourseApplicationAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'application_type', 'status', 'email', 'phone_number', 'created_at', 'get_review_status')
-    list_filter = ('application_type', 'status', 'created_at', 'reviewed_at')
+    list_display = ('full_name', 'application_type', 'status', 'email', 'phone_number', 'submitted_at', 'get_review_status')
+    list_filter = ('application_type', 'status', 'submitted_at', 'reviewed_at')
     search_fields = ('full_name', 'email', 'username', 'phone_number')
-    date_hierarchy = 'created_at'
-    readonly_fields = ('created_at', 'updated_at', 'password', 'reviewed_by', 'reviewed_at', 'user')
+    date_hierarchy = 'submitted_at'
+    readonly_fields = ('submitted_at', 'updated_at', 'password', 'reviewed_by', 'reviewed_at', 'user')
     list_editable = ('status',)
     
     fieldsets = (

@@ -239,8 +239,8 @@ class CourseApplicationSerializer(serializers.ModelSerializer):
         model = CourseApplication
         fields = ['id', 'application_type', 'status', 'full_name', 'email', 'phone_number',
                   'your_interest', 'your_goals', 'username', 'password', 'user', 'user_details',
-                  'created_at', 'updated_at', 'reviewed_at', 'reviewed_by']
-        read_only_fields = ['status', 'user', 'user_details', 'created_at', 'updated_at', 
+                  'submitted_at', 'updated_at', 'reviewed_at', 'reviewed_by']
+        read_only_fields = ['status', 'user', 'user_details', 'submitted_at', 'updated_at', 
                            'reviewed_at', 'reviewed_by']
         extra_kwargs = {
             'password': {'write_only': True}

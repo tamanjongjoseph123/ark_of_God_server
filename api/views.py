@@ -351,7 +351,8 @@ class DevotionViewSet(viewsets.ModelViewSet):
         return Response({'detail': 'No devotions for today'}, status=404)
 
 class CourseApplicationViewSet(viewsets.ModelViewSet):
-    queryset = CourseApplication.objects.all().order_by('-created_at')
+    """ViewSet for CourseApplication model"""
+    queryset = CourseApplication.objects.all().order_by('-submitted_at')
     serializer_class = CourseApplicationSerializer
     
     def get_permissions(self):
